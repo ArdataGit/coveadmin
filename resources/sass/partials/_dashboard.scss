@@ -1190,4 +1190,95 @@
     }
 }
 
+// DROP DOWN MENU SIDEBAR
+.dashboard__nav {
+  .menu-item-has-children {
+    & {
+      > a {
+        span{
+            margin-left: 5px;
+        }
+        position: relative;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        
+        &::after {
+          content: "";
+          width: 0;
+          height: 0;
+          border-left: 4px solid transparent;
+          border-right: 4px solid transparent;
+          border-top: 6px solid var(--contentColor);
+          transition: all 0.3s ease;
+          margin-left: auto;
+        }
+        
+        &:hover::after {
+          border-top-color: var(--primaryColor);
+        }
+      }
+      
+      .dropdown {
+        display: none;
+        padding-left: 20px;
+        background: var(--lightGrey7);
+        margin-top: 10px;
+        border-radius: 5px;
+        box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.05);
+        
+        li {
+          list-style: none;
+          margin: 2px 0;
+          
+          a {
+            padding: 8px 15px;
+            font-size: 14px;
+            color: var(--contentColor);
+            text-decoration: none;
+            transition: all 0.3s ease;
+            border-radius: 3px;
+            display: block;
+            
+            &:hover {
+              background: var(--lightGrey5);
+              color: var(--primaryColor);
+            }
+          }
+          
+          &.active a,
+          a.active {
+            background: var(--lightGrey5);
+            color: var(--primaryColor);
+            font-weight: 600;
+          }
+        }
+      }
+      
+      &.active {
+        > a::after {
+          transform: rotate(180deg);
+          border-top-color: var(--primaryColor);
+        }
+        
+        .dropdown {
+          display: block !important;
+          visibility: visible !important;
+          animation: dropdownSlide 0.3s ease-out;
+        }
+      }
+    }
+  }
+}
+
+@keyframes dropdownSlide {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+} 
 

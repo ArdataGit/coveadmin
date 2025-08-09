@@ -1,3 +1,4 @@
+@charset "UTF-8";
 /*********************************************************************************
 
 	Template Name: Edurock - Education LMS Template
@@ -876,6 +877,19 @@ li {
 /*------------------------------
 Header Area
 -------------------------------*/
+.header__area.sticky {
+  position: fixed;
+  top: 0;
+  background: var(--whiteColor);
+  z-index: 9999;
+  right: 0;
+  left: 0;
+  width: 100%;
+  transition: 0.4s;
+  box-shadow: 0 0 50px 10px rgba(95, 45, 237, 0.15);
+  animation: 300ms ease-in-out 0s normal none 1 running fadeInDown;
+}
+
 .headerarea .container {
   position: relative;
 }
@@ -11821,48 +11835,100 @@ Breadcrumb Area
   display: block;
 }
 
-.dashboard__nav .menu-item-has-children > a {
+.dashboard__nav {
+  margin-bottom: 20px;
+  padding: 15px;
+  background: var(--whiteColor);
+  border-radius: var(--borderRadius3);
+  box-shadow: 0 0 20px 10px rgba(95, 45, 237, 0.02);
+}
+.dashboard__nav ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.dashboard__nav .menu-item-has-children {
   position: relative;
+  margin-bottom: 10px;
+}
+.dashboard__nav .menu-item-has-children > a {
   display: flex;
   align-items: center;
   justify-content: space-between;
-}
-.dashboard__nav .menu-item-has-children > a span {
-  margin-left: 5px;
-}
-.dashboard__nav .menu-item-has-children > a::after {
-  content: "";
-  width: 0;
-  height: 0;
-  border-left: 4px solid transparent;
-  border-right: 4px solid transparent;
-  border-top: 6px solid var(--contentColor);
+  padding: 10px 15px;
+  color: var(--contentColor);
+  text-decoration: none;
+  border-radius: 6px;
   transition: all 0.3s ease;
-  margin-left: auto;
+  border-left: 3px solid transparent;
+  background: var(--lightGrey5);
+}
+.dashboard__nav .menu-item-has-children > a:hover {
+  background: var(--primaryColor);
+  color: var(--whiteColor);
+  border-left-color: var(--primaryColor);
+}
+.dashboard__nav .menu-item-has-children > a:hover svg {
+  stroke: var(--whiteColor);
 }
 .dashboard__nav .menu-item-has-children > a:hover::after {
-  border-top-color: var(--primaryColor);
+  color: var(--whiteColor);
+}
+.dashboard__nav .menu-item-has-children > a svg {
+  width: 16px;
+  height: 16px;
+  margin-right: 10px;
+  transition: all 0.3s ease;
+}
+.dashboard__nav .menu-item-has-children > a::after {
+  content: "▼";
+  font-size: 10px;
+  margin-left: auto;
+  transition: transform 0.3s ease;
+  color: var(--contentColor);
+}
+.dashboard__nav .menu-item-has-children.active > a {
+  background: var(--primaryColor);
+  color: var(--whiteColor);
+  border-left-color: var(--primaryColor);
+}
+.dashboard__nav .menu-item-has-children.active > a svg {
+  stroke: var(--whiteColor);
+}
+.dashboard__nav .menu-item-has-children.active > a::after {
+  transform: rotate(180deg);
+  color: var(--whiteColor);
+}
+.dashboard__nav .menu-item-has-children.active > .dropdown {
+  display: block !important;
+  animation: slideDown 0.3s ease-out;
 }
 .dashboard__nav .menu-item-has-children .dropdown {
   display: none;
-  padding-left: 20px;
+  margin: 5px 0 0 15px;
+  padding: 8px 0;
   background: var(--lightGrey7);
-  margin-top: 10px;
-  border-radius: 5px;
-  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.05);
+  border-radius: 6px;
+  border: 1px solid var(--borderColor);
 }
 .dashboard__nav .menu-item-has-children .dropdown li {
   list-style: none;
   margin: 2px 0;
 }
 .dashboard__nav .menu-item-has-children .dropdown li a {
+  display: flex;
+  align-items: center;
   padding: 8px 15px;
-  font-size: 14px;
   color: var(--contentColor);
   text-decoration: none;
+  font-size: 14px;
+  font-weight: 500;
   transition: all 0.3s ease;
-  border-radius: 3px;
-  display: block;
+}
+.dashboard__nav .menu-item-has-children .dropdown li a::before {
+  content: "•";
+  color: var(--primaryColor);
+  margin-right: 8px;
 }
 .dashboard__nav .menu-item-has-children .dropdown li a:hover {
   background: var(--lightGrey5);
@@ -11874,24 +11940,72 @@ Breadcrumb Area
   color: var(--primaryColor);
   font-weight: 600;
 }
-.dashboard__nav .menu-item-has-children.active > a::after {
-  transform: rotate(180deg);
-  border-top-color: var(--primaryColor);
+.dashboard__nav li:not(.menu-item-has-children) {
+  margin-bottom: 10px;
 }
-.dashboard__nav .menu-item-has-children.active .dropdown {
-  display: block !important;
-  visibility: visible !important;
-  animation: dropdownSlide 0.3s ease-out;
+.dashboard__nav li:not(.menu-item-has-children) a {
+  display: flex;
+  align-items: center;
+  padding: 10px 15px;
+  color: var(--contentColor);
+  text-decoration: none;
+  border-radius: 6px;
+  transition: all 0.3s ease;
+  border-left: 3px solid transparent;
+  background: var(--lightGrey5);
+}
+.dashboard__nav li:not(.menu-item-has-children) a:hover {
+  background: var(--primaryColor);
+  color: var(--whiteColor);
+  border-left-color: var(--primaryColor);
+}
+.dashboard__nav li:not(.menu-item-has-children) a:hover svg {
+  stroke: var(--whiteColor);
+}
+.dashboard__nav li:not(.menu-item-has-children) a.active {
+  background: var(--primaryColor);
+  color: var(--whiteColor);
+  border-left-color: var(--primaryColor);
+}
+.dashboard__nav li:not(.menu-item-has-children) a.active svg {
+  stroke: var(--whiteColor);
+}
+.dashboard__nav li:not(.menu-item-has-children) a svg {
+  width: 16px;
+  height: 16px;
+  margin-right: 10px;
+  transition: all 0.3s ease;
 }
 
-@keyframes dropdownSlide {
-  from {
+@keyframes slideDown {
+  0% {
     opacity: 0;
     transform: translateY(-10px);
   }
-  to {
+  100% {
     opacity: 1;
     transform: translateY(0);
+  }
+}
+.dashboard__nav__title h6 {
+  color: var(--contentColor);
+  font-size: 14px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 10px;
+  padding: 10px 15px 7px;
+  background: var(--lightGrey5);
+}
+
+/* Media query untuk responsivitas */
+@media screen and (max-width: 767px) {
+  .dashboard__nav {
+    padding: 10px;
+  }
+  .dashboard__nav .menu-item-has-children.active > .dropdown {
+    display: block !important;
+    visibility: visible !important;
   }
 }
 /*------------------------------
