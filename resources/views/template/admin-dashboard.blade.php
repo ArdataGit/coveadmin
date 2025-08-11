@@ -210,9 +210,9 @@
                     <div class="row">
                         <div class="col-xl-3 col-lg-3 col-md-12">
                             <div class="dashboard__inner sticky-top">
-                                <div style="place-self: center;">
+                                <!-- <div style="place-self: center;">
                                 <img loading="lazy" src="{{ asset('img/logo/logo_1.png') }}" alt="Edurock Logo">
-                                </div>
+                                </div> -->
                                 <div class="dashboard__nav__title">
                                     <h6>Welcome, {{ Auth::user()->name ?? 'Micle Obema' }}</h6>
                                 </div>
