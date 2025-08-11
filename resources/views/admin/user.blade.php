@@ -37,6 +37,8 @@
                     <th>Nama</th>
                     <th>NIK</th>
                     <th>Email</th>
+                    <th>Foto KTP</th>
+                    <th>Foto Selfie</th>
                     <th>Alamat</th>
                     <th>Status</th>
                     <th>Actions</th>
@@ -49,6 +51,32 @@
                         <td>{{ $item->nama }}</td>
                         <td>{{ $item->nik }}</td>
                         <td>{{ $item->email }}</td>
+                        <td>
+                            @if($item->gambarktp)
+                                <a href="#" 
+                                class="preview-link text-primary" 
+                                data-bs-toggle="modal" 
+                                data-bs-target="#imagePreviewModal" 
+                                data-img-src="{{ asset("img/user/{$item->id}/gambarktp/{$item->gambarktp}") }}">
+                                    Lihat Foto
+                                </a>
+                            @else
+                                <span class="text-muted">No Image</span>
+                            @endif
+                        </td>
+                        <td>
+                            @if($item->fotoselfie)
+                                <a href="#" 
+                                class="preview-link text-primary" 
+                                data-bs-toggle="modal" 
+                                data-bs-target="#imagePreviewModal" 
+                                data-img-src="{{ asset("img/user/{$item->id}/fotoselfie/{$item->fotoselfie}") }}">
+                                    Lihat Foto
+                                </a>
+                            @else
+                                <span class="text-muted">No Image</span>
+                            @endif
+                        </td>
                         <td>{{ $item->alamat }}</td>
                         <td>{{ ucfirst($item->status) }}</td>
                         <td>
@@ -58,7 +86,7 @@
                                     data-nik="{{ $item->nik }}" 
                                     data-email="{{ $item->email }}" 
                                     data-alamat="{{ $item->alamat }}" 
-                                    data-status="{{ $item->status }}" 
+                                    data-status="{{ $item->status }}"
                                     data-bs-toggle="modal" 
                                     data-bs-target="#editUserModal">
                                 <i class="icofont-edit"></i> Edit
@@ -73,7 +101,7 @@
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="8" class="text-center">No data available</td>
+                        <td colspan="9" class="text-center">No data available</td>
                     </tr>
                 @endforelse
             </tbody>
@@ -118,6 +146,16 @@
                             @error('password')
                                 <small class="text-danger">{{ $message }}</small>
                             @enderror
+                        </div>
+                        <div class="mb-3">
+                            <label for="gambarktp" class="form-label">Foto KTP</label>
+                            <input type="file" class="form-control" id="gambarktp" name="gambarktp" accept="image/*" required>
+                            <div class="form-text">Format: JPG, JPEG, PNG. Max: 2MB</div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="fotoselfie" class="form-label">Foto Selfie</label>
+                            <input type="file" class="form-control" id="fotoselfie" name="fotoselfie" accept="image/*" required>
+                            <div class="form-text">Format: JPG, JPEG, PNG. Max: 2MB</div>
                         </div>
                         <div class="mb-3">
                             <label for="alamat" class="form-label">Alamat</label>
@@ -181,6 +219,16 @@
                             @enderror
                         </div>
                         <div class="mb-3">
+                            <label for="edit_gambarktp" class="form-label">Foto KTP</label>
+                            <input type="file" class="form-control" id="edit_gambarktp" name="gambarktp" accept="image/*">
+                            <div class="form-text">Format: JPG, JPEG, PNG. Max: 2MB</div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="edit_fotoselfie" class="form-label">Foto Selfie</label>
+                            <input type="file" class="form-control" id="edit_fotoselfie" name="fotoselfie" accept="image/*">
+                            <div class="form-text">Format: JPG, JPEG, PNG. Max: 2MB</div>
+                        </div>
+                        <div class="mb-3">
                             <label for="edit_alamat" class="form-label">Alamat</label>
                             <textarea class="form-control" id="edit_alamat" name="alamat" rows="4" required></textarea>
                             @error('alamat')
@@ -203,6 +251,21 @@
                         <button type="submit" class="btn btn-primary">Update</button>
                     </div>
                 </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Image Preview Modal -->
+    <div class="modal fade" id="imagePreviewModal" tabindex="-1" aria-labelledby="imagePreviewModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="imagePreviewModalLabel">Image Preview</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body text-center">
+                    <img id="previewImage" src="" alt="Image Preview" style="max-width: 100%; max-height: 500px; object-fit: contain;">
+                </div>
             </div>
         </div>
     </div>
@@ -239,7 +302,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Check for CSRF token
     const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content;
     if (!csrfToken) {
-        console.error('CSRF token not found. Please add <meta name="csrf-token" content="{{ csrf_token() }}"> to the layout.');
+        console.error('CSRF token not found.');
         alert('CSRF token is missing. Please contact the administrator.');
         return;
     }
@@ -257,7 +320,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const tbody = document.getElementById('user-table-body');
             tbody.innerHTML = '';
             if (data.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="8" class="text-center">No data available</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="9" class="text-center">No data available</td></tr>';
                 return;
             }
             data.forEach(item => {
@@ -268,6 +331,24 @@ document.addEventListener('DOMContentLoaded', function() {
                     <td>${item.nama}</td>
                     <td>${item.nik}</td>
                     <td>${item.email}</td>
+                    <td>${item.gambarktp ? 
+                        `<a href="#" 
+                            class="preview-link text-primary" 
+                            data-bs-toggle="modal" 
+                            data-bs-target="#imagePreviewModal" 
+                            data-img-src="{{ asset('img/user') }}/${item.id}/gambarktp/${item.gambarktp}">
+                            Lihat Foto
+                        </a>` : 
+                        '<span class="text-muted">No Image</span>'}</td>
+                    <td>${item.fotoselfie ? 
+                        `<a href="#" 
+                            class="preview-link text-primary" 
+                            data-bs-toggle="modal" 
+                            data-bs-target="#imagePreviewModal" 
+                            data-img-src="{{ asset('img/user') }}/${item.id}/fotoselfie/${item.fotoselfie}">
+                            Lihat Foto
+                        </a>` : 
+                        '<span class="text-muted">No Image</span>'}</td>
                     <td>${item.alamat}</td>
                     <td>${item.status.charAt(0).toUpperCase() + item.status.slice(1)}</td>
                     <td>${item.created_at}</td>
@@ -347,12 +428,15 @@ document.addEventListener('DOMContentLoaded', function() {
                 document.getElementById('deleteUserForm').action = `{{ url('dashboard/master-user') }}/${id}`;
             });
         });
+
+        document.querySelectorAll('.preview-link').forEach(link => {
+            link.addEventListener('click', function() {
+                const imgSrc = this.getAttribute('data-img-src');
+                document.getElementById('previewImage').src = imgSrc;
+            });
+        });
     }
 
-    // Initial attachment of button listeners
-    attachButtonListeners();
-
-    // AJAX for Add Form
     document.getElementById('addUserForm').addEventListener('submit', function(e) {
         e.preventDefault();
         const form = this;
@@ -442,6 +526,7 @@ document.addEventListener('DOMContentLoaded', function() {
             showAlert('danger', 'An error occurred. Please try again.');
         });
     });
+    attachButtonListeners();
 });
 </script>
 @endsection
