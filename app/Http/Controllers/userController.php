@@ -15,9 +15,23 @@ class userController extends Controller
         return view('admin.user', compact('users')); // Adjust to 'master-user' if needed
     }
 
-    public function data()
+    public function data(Request $request)
     {
-        $users = User::all()->map(function ($item) {
+        $search = $request->query('search');
+
+        $query = User::query();
+
+        if ($search) {
+            $query->where(function($q) use ($search) {
+                $q->where('nama', 'like', "%{$search}%")
+                ->orWhere('nik', 'like', "%{$search}%")
+                ->orWhere('email', 'like', "%{$search}%")
+                ->orWhere('alamat', 'like', "%{$search}%")
+                ->orWhere('status', 'like', "%{$search}%");
+            });
+        }
+
+        $users = $query->get()->map(function ($item) {
             return [
                 'id' => $item->id,
                 'nama' => $item->nama,
@@ -30,8 +44,10 @@ class userController extends Controller
                 'created_at' => $item->created_at->format('d M Y H:i'),
             ];
         });
+
         return response()->json($users);
     }
+
 
     public function store(Request $request)
     {

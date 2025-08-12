@@ -7,11 +7,17 @@
     <h2 class="mb-4">Master Fasilitas</h2>
     <div class="d-flex justify-content-between mb-3">
         <h5>List Fasilitas</h5>
-        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addFasilitasModal">
-            <i class="icofont-plus"></i> Tambah Fasilitas
-        </button>
     </div>
-
+    <div class="row">
+        <div class="col-6">
+            <input type="text" id="searchInput" class="form-control" placeholder="Search facilities..." style="max-width: 300px;">
+        </div>
+        <div class="col-6" >
+            <button class="btn btn-primary" style="float: inline-end;" data-bs-toggle="modal" data-bs-target="#addFasilitasModal">
+                <i class="icofont-plus"></i> Tambah Fasilitas
+            </button>
+        </div>
+    </div>
     <!-- Success/Error Messages -->
     <div id="alert-container">
         @if (session('success'))
@@ -30,10 +36,10 @@
 
     <!-- Fasilitas Table -->
     <div class="dashboard__table table-responsive">
-        <table class="">
+        <table class="table">
             <thead class="table-light">
                 <tr>
-                    <th>ID</th>
+                    <th>No</th>
                     <th>Nama</th>
                     <th>Created At</th>
                     <th>Actions</th>
@@ -159,8 +165,12 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // Function to refresh table data
-    function refreshTable() {
-        fetch('{{ route('fasilitas.data') }}', {
+    function refreshTable(search = '') {
+        const url = search 
+            ? `{{ route('fasilitas.data') }}?search=${encodeURIComponent(search)}`
+            : '{{ route('fasilitas.data') }}';
+        
+        fetch(url, {
             headers: {
                 'X-CSRF-TOKEN': csrfToken,
                 'Accept': 'application/json'
@@ -178,7 +188,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 const row = document.createElement('tr');
                 row.setAttribute('data-id', item.id);
                 row.innerHTML = `
-                    <td>${item.id}</td>
+                    <td>${index + 1}</td> 
                     <td>${item.nama}</td>
                     <td>${item.created_at}</td>
                     <td>
@@ -240,6 +250,16 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
+    // Search functionality
+    let searchTimeout;
+    document.getElementById('searchInput').addEventListener('input', function() {
+        clearTimeout(searchTimeout);
+        searchTimeout = setTimeout(() => {
+            const searchTerm = this.value.trim();
+            refreshTable(searchTerm);
+        }, 300); // Debounce to prevent excessive requests
+    });
+
     // Initial attachment of button listeners
     attachButtonListeners();
 
@@ -263,7 +283,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 form.reset();
                 document.getElementById('addFasilitasModal').querySelector('.btn-close').click();
                 showAlert('success', data.message);
-                refreshTable();
+                refreshTable(document.getElementById('searchInput').value);
             } else {
                 showAlert('danger', data.message || 'Failed to add facility');
             }
@@ -293,7 +313,7 @@ document.addEventListener('DOMContentLoaded', function() {
             if (data.success) {
                 document.getElementById('editFasilitasModal').querySelector('.btn-close').click();
                 showAlert('success', data.message);
-                refreshTable();
+                refreshTable(document.getElementById('searchInput').value);
             } else {
                 showAlert('danger', data.message || 'Failed to update facility');
             }
@@ -323,7 +343,7 @@ document.addEventListener('DOMContentLoaded', function() {
             if (data.success) {
                 document.getElementById('deleteFasilitasModal').querySelector('.btn-close').click();
                 showAlert('success', data.message);
-                refreshTable();
+                refreshTable(document.getElementById('searchInput').value);
             } else {
                 showAlert('danger', data.message || 'Failed to delete facility');
             }
