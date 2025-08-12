@@ -6,26 +6,43 @@ use App\Models\Fasilitas;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 
-class fasilitasController extends Controller
+class FasilitasController extends Controller
 {
+    /**
+     * Display a listing of facilities
+     */
     public function index()
     {
         $fasilitas = Fasilitas::all();
         return view('admin.fasilitas', compact('fasilitas'));
     }
 
-    public function data()
+    /**
+     * Return facility data for AJAX table
+     */
+    public function data(Request $request)
     {
-        $fasilitas = Fasilitas::all()->map(function ($item) {
+        $query = Fasilitas::query();
+
+        // Apply search filter if provided
+        if ($search = $request->query('search')) {
+            $query->where('nama', 'LIKE', "%{$search}%");
+        }
+
+        $fasilitas = $query->orderBy('created_at', 'desc')->get()->map(function ($item) {
             return [
                 'id' => $item->id,
                 'nama' => $item->nama,
                 'created_at' => $item->created_at->format('d M Y H:i'),
             ];
         });
+
         return response()->json($fasilitas);
     }
 
+    /**
+     * Store a new facility
+     */
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
@@ -37,9 +54,18 @@ class fasilitasController extends Controller
         }
 
         Fasilitas::create($request->only('nama'));
-        return response()->json(['success' => true, 'message' => 'Facility added successfully']);
+
+        // Return JSON for AJAX or redirect for non-AJAX
+        if ($request->expectsJson()) {
+            return response()->json(['success' => true, 'message' => 'Facility added successfully']);
+        }
+
+        return redirect()->route('fasilitas.index')->with('success', 'Facility added successfully');
     }
 
+    /**
+     * Update an existing facility
+     */
     public function update(Request $request, $id)
     {
         $validator = Validator::make($request->all(), [
@@ -52,13 +78,37 @@ class fasilitasController extends Controller
 
         $fasilitas = Fasilitas::findOrFail($id);
         $fasilitas->update($request->only('nama'));
-        return response()->json(['success' => true, 'message' => 'Facility updated successfully']);
+
+        // Return JSON for AJAX or redirect for non-AJAX
+        if ($request->expectsJson()) {
+            return response()->json(['success' => true, 'message' => 'Facility updated successfully']);
+        }
+
+        return redirect()->route('fasilitas.index')->with('success', 'Facility updated successfully');
     }
 
+    /**
+     * Delete a facility
+     */
     public function destroy($id)
     {
-        $fasilitas = Fasilitas::findOrFail($id);
-        $fasilitas->delete();
-        return response()->json(['success' => true, 'message' => 'Facility deleted successfully']);
+        try {
+            $fasilitas = Fasilitas::findOrFail($id);
+            $fasilitas->delete();
+
+            // Return JSON for AJAX or redirect for non-AJAX
+            if (request()->expectsJson()) {
+                return response()->json(['success' => true, 'message' => 'Facility deleted successfully']);
+            }
+
+            return redirect()->route('fasilitas.index')->with('success', 'Facility deleted successfully');
+        } catch (\Exception $e) {
+            // Return JSON for AJAX or redirect for non-AJAX
+            if (request()->expectsJson()) {
+                return response()->json(['success' => false, 'message' => 'Failed to delete facility: ' . $e->getMessage()], 422);
+            }
+
+            return redirect()->route('fasilitas.index')->with('error', 'Failed to delete facility: ' . $e->getMessage());
+        }
     }
 }

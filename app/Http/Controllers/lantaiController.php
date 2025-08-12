@@ -14,51 +14,66 @@ class lantaiController extends Controller
         return view('admin.lantai', compact('lantai'));
     }
 
-    public function data()
+    public function data(Request $request)
     {
-        $lantai = Lantai::all()->map(function ($item) {
+        $search = $request->query('search');
+
+        $query = Lantai::query();
+
+        if ($search) {
+            $query->where('nama', 'like', '%' . $search . '%');
+        }
+
+        $lantai = $query->orderBy('created_at', 'desc')->get()->map(function ($item) {
             return [
                 'id' => $item->id,
                 'nama' => $item->nama,
                 'created_at' => $item->created_at->format('d M Y H:i'),
             ];
         });
+
         return response()->json($lantai);
     }
 
     public function store(Request $request)
-    {
-        $validator = Validator::make($request->all(), [
-            'nama' => 'required|string|max:255',
-        ]);
+{
+    $validator = Validator::make($request->all(), [
+        'nama' => 'required|string|max:255',
+    ]);
 
-        if ($validator->fails()) {
-            return response()->json(['success' => false, 'message' => $validator->errors()->first()], 422);
-        }
-
-        Lantai::create($request->only('nama'));
-        return response()->json(['success' => true, 'message' => 'Floor added successfully']);
+    if ($validator->fails()) {
+        return redirect()->back()
+            ->withErrors($validator)
+            ->withInput()
+            ->with('error', $validator->errors()->first());
     }
 
-    public function update(Request $request, $id)
-    {
-        $validator = Validator::make($request->all(), [
-            'nama' => 'required|string|max:255',
-        ]);
+    Lantai::create($request->only('nama'));
+    return redirect()->route('lantai.index')->with('success', 'Floor added successfully');
+}
 
-        if ($validator->fails()) {
-            return response()->json(['success' => false, 'message' => $validator->errors()->first()], 422);
-        }
+public function update(Request $request, $id)
+{
+    $validator = Validator::make($request->all(), [
+        'nama' => 'required|string|max:255',
+    ]);
 
-        $lantai = Lantai::findOrFail($id);
-        $lantai->update($request->only('nama'));
-        return response()->json(['success' => true, 'message' => 'Floor updated successfully']);
+    if ($validator->fails()) {
+        return redirect()->back()
+            ->withErrors($validator)
+            ->withInput()
+            ->with('error', $validator->errors()->first());
     }
 
-    public function destroy($id)
-    {
-        $lantai = Lantai::findOrFail($id);
-        $lantai->delete();
-        return response()->json(['success' => true, 'message' => 'Floor deleted successfully']);
-    }
+    $lantai = Lantai::findOrFail($id);
+    $lantai->update($request->only('nama'));
+    return redirect()->route('lantai.index')->with('success', 'Floor updated successfully');
+}
+
+public function destroy($id)
+{
+    $lantai = Lantai::findOrFail($id);
+    $lantai->delete();
+    return redirect()->route('lantai.index')->with('success', 'Floor deleted successfully');
+}
 }

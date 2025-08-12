@@ -5,13 +5,18 @@
 @section('content')
 <div class="dashboard-content">
     <h2 class="mb-4">Master Tipe Kos</h2>
-    <div class="d-flex justify-content-between mb-3">
-        <h5>List Tipe Kos</h5>
-        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addTipeKosModal">
-            <i class="icofont-plus"></i> Tambah Tipe Kos
-        </button>
-    </div>
 
+    <!-- Search input -->
+    <div class="mb-3 row" >
+        <div class="col-6">
+            <input type="text" id="searchInput" class="form-control" placeholder="Cari Kos...">
+        </div>
+        <div class="col-6">
+            <button class="btn btn-primary" style="float: inline-end;" data-bs-toggle="modal" data-bs-target="#addTipeKosModal">
+                <i class="icofont-plus"></i> Tambah Tipe
+            </button>
+        </div>
+    </div>
     <!-- Success/Error Messages -->
     <div id="alert-container">
         @if (session('success'))
@@ -33,7 +38,7 @@
         <table class="">
             <thead class="table-light">
                 <tr>
-                    <th>ID</th>
+                    <th>No</th>
                     <th>Nama</th>
                     <th>Created At</th>
                     <th>Actions</th>
@@ -146,7 +151,6 @@
     </div>
 </div>
 @endsection
-
 @section('scripts')
 <script>
 document.addEventListener('DOMContentLoaded', function() {
@@ -158,9 +162,17 @@ document.addEventListener('DOMContentLoaded', function() {
         return;
     }
 
-    // Function to refresh table data
-    function refreshTable() {
-        fetch('{{ route('tipe-kos.data') }}', {
+    const searchInput = document.getElementById('searchInput');
+
+    // Function to refresh table data, optional search param
+    function refreshTable(search = '') {
+        // Build URL with search param jika ada
+        const url = new URL('{{ route('tipe-kos.data') }}', window.location.origin);
+        if (search) {
+            url.searchParams.append('search', search);
+        }
+
+        fetch(url.toString(), {
             headers: {
                 'X-CSRF-TOKEN': csrfToken,
                 'Accept': 'application/json'
@@ -174,11 +186,11 @@ document.addEventListener('DOMContentLoaded', function() {
                 tbody.innerHTML = '<tr><td colspan="4" class="text-center">No data available</td></tr>';
                 return;
             }
-            data.forEach(item => {
+            data.forEach((item, index) => {
                 const row = document.createElement('tr');
                 row.setAttribute('data-id', item.id);
                 row.innerHTML = `
-                    <td>${item.id}</td>
+                    <td>${index + 1}</td>
                     <td>${item.nama}</td>
                     <td>${item.created_at}</td>
                     <td>
@@ -198,6 +210,14 @@ document.addEventListener('DOMContentLoaded', function() {
         .catch(error => {
             console.error('Error fetching table data:', error);
             showAlert('danger', 'Failed to refresh table data.');
+        });
+    }
+
+    // Event listener for search input realtime
+    if(searchInput) {
+        searchInput.addEventListener('input', function() {
+            const query = this.value.trim();
+            refreshTable(query);
         });
     }
 
@@ -243,6 +263,9 @@ document.addEventListener('DOMContentLoaded', function() {
     // Initial attachment of button listeners
     attachButtonListeners();
 
+    // Initial table load (with no search filter)
+    refreshTable();
+
     // AJAX for Add Form
     document.getElementById('addTipeKosForm').addEventListener('submit', function(e) {
         e.preventDefault();
@@ -263,7 +286,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 form.reset();
                 document.getElementById('addTipeKosModal').querySelector('.btn-close').click();
                 showAlert('success', data.message);
-                refreshTable();
+                refreshTable(searchInput ? searchInput.value.trim() : '');
             } else {
                 showAlert('danger', data.message || 'Failed to add room type');
             }
@@ -293,7 +316,7 @@ document.addEventListener('DOMContentLoaded', function() {
             if (data.success) {
                 document.getElementById('editTipeKosModal').querySelector('.btn-close').click();
                 showAlert('success', data.message);
-                refreshTable();
+                refreshTable(searchInput ? searchInput.value.trim() : '');
             } else {
                 showAlert('danger', data.message || 'Failed to update room type');
             }
@@ -323,7 +346,7 @@ document.addEventListener('DOMContentLoaded', function() {
             if (data.success) {
                 document.getElementById('deleteTipeKosModal').querySelector('.btn-close').click();
                 showAlert('success', data.message);
-                refreshTable();
+                refreshTable(searchInput ? searchInput.value.trim() : '');
             } else {
                 showAlert('danger', data.message || 'Failed to delete room type');
             }

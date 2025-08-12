@@ -2,14 +2,34 @@
 
 @section('title', 'Master User')
 
+@push('style')
+<style>
+/* Style for empty state */
+.empty-state {
+    text-align: center;
+    padding: 20px;
+    background-color: #f8f9fa;
+    border-radius: 5px;
+    margin-bottom: 20px;
+}
+</style>
+@endpush
+
 @section('content')
 <div class="dashboard-content">
     <h2 class="mb-4">Master User</h2>
-    <div class="d-flex justify-content-between mb-3">
-        <h5>List User</h5>
-        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addUserModal">
-            <i class="icofont-plus"></i> Tambah User
-        </button>
+
+    <!-- Search input and Add User button -->
+    <div class="mb-3 row">
+        <div class="col-6">
+            <input type="text" id="searchInput" class="form-control" placeholder="Cari User..." 
+                   style="max-width: 300px;" @if($users->isEmpty()) disabled @endif>
+        </div>
+        <div class="col-6">
+            <button class="btn btn-primary" style="float: inline-end;" data-bs-toggle="modal" data-bs-target="#addUserModal">
+                <i class="icofont-plus"></i> Tambah User
+            </button>
+        </div>
     </div>
 
     <!-- Success/Error Messages -->
@@ -29,84 +49,86 @@
     </div>
 
     <!-- User Table -->
-    <div class="dashboard__table table-responsive">
-        <table class="">
-            <thead class="table-light">
-                <tr>
-                    <th>ID</th>
-                    <th>Nama</th>
-                    <th>NIK</th>
-                    <th>Email</th>
-                    <th>Foto KTP</th>
-                    <th>Foto Selfie</th>
-                    <th>Alamat</th>
-                    <th>Status</th>
-                    <th>Actions</th>
-                </tr>
-            </thead>
-            <tbody id="user-table-body">
-                @forelse ($users as $item)
-                    <tr data-id="{{ $item->id }}">
-                        <td>{{ $item->id }}</td>
-                        <td>{{ $item->nama }}</td>
-                        <td>{{ $item->nik }}</td>
-                        <td>{{ $item->email }}</td>
-                        <td>
-                            @if($item->gambarktp)
-                                <a href="#" 
-                                class="preview-link text-primary" 
-                                data-bs-toggle="modal" 
-                                data-bs-target="#imagePreviewModal" 
-                                data-img-src="{{ asset("img/user/{$item->id}/gambarktp/{$item->gambarktp}") }}">
-                                    Lihat Foto
-                                </a>
-                            @else
-                                <span class="text-muted">No Image</span>
-                            @endif
-                        </td>
-                        <td>
-                            @if($item->fotoselfie)
-                                <a href="#" 
-                                class="preview-link text-primary" 
-                                data-bs-toggle="modal" 
-                                data-bs-target="#imagePreviewModal" 
-                                data-img-src="{{ asset("img/user/{$item->id}/fotoselfie/{$item->fotoselfie}") }}">
-                                    Lihat Foto
-                                </a>
-                            @else
-                                <span class="text-muted">No Image</span>
-                            @endif
-                        </td>
-                        <td>{{ $item->alamat }}</td>
-                        <td>{{ ucfirst($item->status) }}</td>
-                        <td>
-                            <button class="btn btn-sm btn-warning edit-btn" 
-                                    data-id="{{ $item->id }}" 
-                                    data-nama="{{ $item->nama }}" 
-                                    data-nik="{{ $item->nik }}" 
-                                    data-email="{{ $item->email }}" 
-                                    data-alamat="{{ $item->alamat }}" 
-                                    data-status="{{ $item->status }}"
-                                    data-bs-toggle="modal" 
-                                    data-bs-target="#editUserModal">
-                                <i class="icofont-edit"></i> Edit
-                            </button>
-                            <button class="btn btn-sm btn-danger delete-btn" 
-                                    data-id="{{ $item->id }}" 
-                                    data-bs-toggle="modal" 
-                                    data-bs-target="#deleteUserModal">
-                                <i class="icofont-trash"></i> Delete
-                            </button>
-                        </td>
-                    </tr>
-                @empty
+    @if ($users->isNotEmpty())
+        <div class="dashboard__table table-responsive">
+            <table class="table">
+                <thead class="table-light">
                     <tr>
-                        <td colspan="9" class="text-center">No data available</td>
+                        <th>No</th>
+                        <th>Nama</th>
+                        <th>NIK</th>
+                        <th>Email</th>
+                        <th>Foto KTP</th>
+                        <th>Foto Selfie</th>
+                        <th>Alamat</th>
+                        <th>Status</th>
+                        <th>Actions</th>
                     </tr>
-                @endforelse
-            </tbody>
-        </table>
-    </div>
+                </thead>
+                <tbody id="user-table-body">
+                    @foreach ($users as $item)
+                        <tr data-id="{{ $item->id }}">
+                            <td>{{ $item->id }}</td>
+                            <td>{{ $item->nama }}</td>
+                            <td>{{ $item->nik }}</td>
+                            <td>{{ $item->email }}</td>
+                            <td>
+                                @if($item && $item->gambarktp)
+                                    <a href="#" 
+                                       class="preview-link text-primary" 
+                                       data-bs-toggle="modal" 
+                                       data-bs-target="#imagePreviewModal" 
+                                       data-img-src="{{ asset("img/user/{$item->id}/gambarktp/{$item->gambarktp}") }}">
+                                        Lihat Foto
+                                    </a>
+                                @else
+                                    <span class="text-muted">No Image</span>
+                                @endif
+                            </td>
+                            <td>
+                                @if($item && $item->fotoselfie)
+                                    <a href="#" 
+                                       class="preview-link text-primary" 
+                                       data-bs-toggle="modal" 
+                                       data-bs-target="#imagePreviewModal" 
+                                       data-img-src="{{ asset("img/user/{$item->id}/fotoselfie/{$item->fotoselfie}") }}">
+                                        Lihat Foto
+                                    </a>
+                                @else
+                                    <span class="text-muted">No Image</span>
+                                @endif
+                            </td>
+                            <td>{{ $item->alamat }}</td>
+                            <td>{{ ucfirst($item->status) }}</td>
+                            <td>
+                                <button class="btn btn-sm btn-warning edit-btn" 
+                                        data-id="{{ $item->id }}" 
+                                        data-nama="{{ $item->nama }}" 
+                                        data-nik="{{ $item->nik }}" 
+                                        data-email="{{ $item->email }}" 
+                                        data-alamat="{{ $item->alamat }}" 
+                                        data-status="{{ $item->status }}"
+                                        data-bs-toggle="modal" 
+                                        data-bs-target="#editUserModal">
+                                    <i class="icofont-edit"></i> Edit
+                                </button>
+                                <button class="btn btn-sm btn-danger delete-btn" 
+                                        data-id="{{ $item->id }}" 
+                                        data-bs-toggle="modal" 
+                                        data-bs-target="#deleteUserModal">
+                                    <i class="icofont-trash"></i> Delete
+                                </button>
+                            </td>
+                        </tr>
+                    @endforeach
+                </tbody>
+            </table>
+        </div>
+    @else
+        <div class="empty-state">
+            <p>No users available. Click "Tambah User" to add a new user.</p>
+        </div>
+    @endif
 
     <!-- Add User Modal -->
     <div class="modal fade" id="addUserModal" tabindex="-1" aria-labelledby="addUserModalLabel" aria-hidden="true">
@@ -307,6 +329,9 @@ document.addEventListener('DOMContentLoaded', function() {
         return;
     }
 
+    // Store table data for search filtering
+    let tableData = [];
+
     // Function to refresh table data
     function refreshTable() {
         fetch('{{ route('user.data') }}', {
@@ -317,71 +342,112 @@ document.addEventListener('DOMContentLoaded', function() {
         })
         .then(response => response.json())
         .then(data => {
-            const tbody = document.getElementById('user-table-body');
-            tbody.innerHTML = '';
-            if (data.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="9" class="text-center">No data available</td></tr>';
-                return;
-            }
-            data.forEach(item => {
-                const row = document.createElement('tr');
-                row.setAttribute('data-id', item.id);
-                row.innerHTML = `
-                    <td>${item.id}</td>
-                    <td>${item.nama}</td>
-                    <td>${item.nik}</td>
-                    <td>${item.email}</td>
-                    <td>${item.gambarktp ? 
-                        `<a href="#" 
-                            class="preview-link text-primary" 
-                            data-bs-toggle="modal" 
-                            data-bs-target="#imagePreviewModal" 
-                            data-img-src="{{ asset('img/user') }}/${item.id}/gambarktp/${item.gambarktp}">
-                            Lihat Foto
-                        </a>` : 
-                        '<span class="text-muted">No Image</span>'}</td>
-                    <td>${item.fotoselfie ? 
-                        `<a href="#" 
-                            class="preview-link text-primary" 
-                            data-bs-toggle="modal" 
-                            data-bs-target="#imagePreviewModal" 
-                            data-img-src="{{ asset('img/user') }}/${item.id}/fotoselfie/${item.fotoselfie}">
-                            Lihat Foto
-                        </a>` : 
-                        '<span class="text-muted">No Image</span>'}</td>
-                    <td>${item.alamat}</td>
-                    <td>${item.status.charAt(0).toUpperCase() + item.status.slice(1)}</td>
-                    <td>${item.created_at}</td>
-                    <td>
-                        <button class="btn btn-sm btn-warning edit-btn" 
-                                data-id="${item.id}" 
-                                data-nama="${item.nama}" 
-                                data-nik="${item.nik}" 
-                                data-email="${item.email}" 
-                                data-alamat="${item.alamat}" 
-                                data-status="${item.status}" 
-                                data-bs-toggle="modal" 
-                                data-bs-target="#editUserModal">
-                            <i class="icofont-edit"></i> Edit
-                        </button>
-                        <button class="btn btn-sm btn-danger delete-btn" 
-                                data-id="${item.id}" 
-                                data-bs-toggle="modal" 
-                                data-bs-target="#deleteUserModal">
-                            <i class="icofont-trash"></i> Delete
-                        </button>
-                    </td>
-                `;
-                tbody.appendChild(row);
-            });
-            // Reattach event listeners for edit and delete buttons
-            attachButtonListeners();
+            tableData = Array.isArray(data) ? data : []; // Store data for search
+            renderTable(tableData);
+            // Update search input state
+            const searchInput = document.getElementById('searchInput');
+            searchInput.disabled = tableData.length === 0;
         })
         .catch(error => {
             console.error('Error fetching table data:', error);
             showAlert('danger', 'Failed to refresh table data.');
         });
     }
+
+    // Function to render table with filtered data
+    function renderTable(data) {
+        const tbody = document.getElementById('user-table-body');
+        const tableContainer = document.querySelector('.dashboard__table');
+        const emptyState = document.querySelector('.empty-state');
+
+        if (!data || data.length === 0) {
+            if (tableContainer) tableContainer.style.display = 'none';
+            if (emptyState) emptyState.style.display = 'block';
+            return;
+        }
+
+        if (tableContainer) tableContainer.style.display = 'block';
+        if (emptyState) emptyState.style.display = 'none';
+
+        tbody.innerHTML = '';
+        data.forEach(item => {
+            if (!item) return;
+            const row = document.createElement('tr');
+            row.setAttribute('data-id', item.id || '');
+            row.innerHTML = `
+                <td>${item.id || '-'}</td>
+                <td>${item.nama || '-'}</td>
+                <td>${item.nik || '-'}</td>
+                <td>${item.email || '-'}</td>
+                <td>${item.gambarktp ? 
+                    `<a href="#" 
+                        class="preview-link text-primary" 
+                        data-bs-toggle="modal" 
+                        data-bs-target="#imagePreviewModal" 
+                        data-img-src="{{ asset('img/user') }}/${item.id}/gambarktp/${item.gambarktp}">
+                        Lihat Foto
+                    </a>` : 
+                    '<span class="text-muted">No Image</span>'}</td>
+                <td>${item.fotoselfie ? 
+                    `<a href="#" 
+                        class="preview-link text-primary" 
+                        data-bs-toggle="modal" 
+                        data-bs-target="#imagePreviewModal" 
+                        data-img-src="{{ asset('img/user') }}/${item.id}/fotoselfie/${item.fotoselfie}">
+                        Lihat Foto
+                    </a>` : 
+                    '<span class="text-muted">No Image</span>'}</td>
+                <td>${item.alamat || '-'}</td>
+                <td>${item.status ? (item.status.charAt(0).toUpperCase() + item.status.slice(1)) : '-'}</td>
+                <td>
+                    <button class="btn btn-sm btn-warning edit-btn" 
+                            data-id="${item.id || ''}" 
+                            data-nama="${item.nama || ''}" 
+                            data-nik="${item.nik || ''}" 
+                            data-email="${item.email || ''}" 
+                            data-alamat="${item.alamat || ''}" 
+                            data-status="${item.status || ''}"
+                            data-bs-toggle="modal" 
+                            data-bs-target="#editUserModal">
+                        <i class="icofont-edit"></i> Edit
+                    </button>
+                    <button class="btn btn-sm btn-danger delete-btn" 
+                            data-id="${item.id || ''}" 
+                            data-bs-toggle="modal" 
+                            data-bs-target="#deleteUserModal">
+                        <i class="icofont-trash"></i> Delete
+                    </button>
+                </td>
+            `;
+            tbody.appendChild(row);
+        });
+        attachButtonListeners();
+    }
+
+    // Function to filter table based on search input
+    function filterTable(searchTerm) {
+        const filteredData = tableData.filter(item => {
+            if (!item) return false;
+            const searchText = searchTerm.toLowerCase();
+            return (
+                (item.id && item.id.toString().includes(searchText)) ||
+                (item.nama && item.nama.toLowerCase().includes(searchText)) ||
+                (item.nik && item.nik.toString().includes(searchText)) ||
+                (item.email && item.email.toLowerCase().includes(searchText)) ||
+                (item.alamat && item.alamat.toLowerCase().includes(searchText)) ||
+                (item.status && item.status.toLowerCase().includes(searchText))
+            );
+        });
+        renderTable(filteredData);
+    }
+
+    // Search input event listener
+    const searchInput = document.getElementById('searchInput');
+    searchInput.addEventListener('input', function() {
+        if (this.disabled) return; // Ignore input if disabled
+        const searchTerm = this.value.trim();
+        filterTable(searchTerm);
+    });
 
     // Function to show alerts
     function showAlert(type, message) {
@@ -406,11 +472,11 @@ document.addEventListener('DOMContentLoaded', function() {
         document.querySelectorAll('.edit-btn').forEach(button => {
             button.addEventListener('click', function() {
                 const id = this.getAttribute('data-id');
-                const nama = this.getAttribute('data-nama');
-                const nik = this.getAttribute('data-nik');
-                const email = this.getAttribute('data-email');
-                const alamat = this.getAttribute('data-alamat');
-                const status = this.getAttribute('data-status');
+                const nama = this.getAttribute('data-nama') || '';
+                const nik = this.getAttribute('data-nik') || '';
+                const email = this.getAttribute('data-email') || '';
+                const alamat = this.getAttribute('data-alamat') || '';
+                const status = this.getAttribute('data-status') || '';
                 document.getElementById('edit_id').value = id;
                 document.getElementById('edit_nama').value = nama;
                 document.getElementById('edit_nik').value = nik;
@@ -437,6 +503,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
+    // AJAX for Add Form
     document.getElementById('addUserForm').addEventListener('submit', function(e) {
         e.preventDefault();
         const form = this;
@@ -526,7 +593,10 @@ document.addEventListener('DOMContentLoaded', function() {
             showAlert('danger', 'An error occurred. Please try again.');
         });
     });
+
+    // Initial attachment of button listeners and table refresh
     attachButtonListeners();
+    refreshTable();
 });
 </script>
 @endsection

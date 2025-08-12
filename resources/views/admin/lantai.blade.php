@@ -5,13 +5,17 @@
 @section('content')
 <div class="dashboard-content">
     <h2 class="mb-4">Master Lantai</h2>
-    <div class="d-flex justify-content-between mb-3">
-        <h5>List Lantai</h5>
-        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addLantaiModal">
-            <i class="icofont-plus"></i> Tambah Lantai
-        </button>
+    
+    <div class="mb-3 row" >
+        <div class="col-6">
+            <input type="text" id="searchInput" class="form-control" placeholder="Cari Lantai...">
+        </div>
+        <div class="col-6">
+            <button class="btn btn-primary" style="float: inline-end;" data-bs-toggle="modal" data-bs-target="#addLantaiModal">
+                <i class="icofont-plus"></i> Tambah Lantai
+            </button>
+        </div>
     </div>
-
     <!-- Success/Error Messages -->
     <div id="alert-container">
         @if (session('success'))
@@ -33,7 +37,7 @@
         <table class="">
             <thead class="table-light">
                 <tr>
-                    <th>ID</th>
+                    <th>No</th>
                     <th>Nama</th>
                     <th>Created At</th>
                     <th>Actions</th>
@@ -150,35 +154,50 @@
 @section('scripts')
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // Check for CSRF token
     const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content;
     if (!csrfToken) {
-        console.error('CSRF token not found. Please add <meta name="csrf-token" content="{{ csrf_token() }}"> to the layout.');
-        alert('CSRF token is missing. Please contact the administrator.');
+        alert('CSRF token tidak ditemukan.');
         return;
     }
 
-    // Function to refresh table data
-    function refreshTable() {
-        fetch('{{ route('lantai.data') }}', {
+    function showAlert(type, message) {
+        const alertContainer = document.getElementById('alert-container');
+        alertContainer.innerHTML = `
+            <div class="alert alert-${type} alert-dismissible fade show" role="alert">
+                ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        `;
+        setTimeout(() => {
+            const alert = alertContainer.querySelector('.alert');
+            if (alert) alert.classList.remove('show');
+            setTimeout(() => alert?.remove(), 150);
+        }, 3000);
+    }
+
+    function refreshTable(search = '') {
+        let url = '{{ route('lantai.data') }}';
+        if (search) url += '?search=' + encodeURIComponent(search);
+
+        fetch(url, {
             headers: {
                 'X-CSRF-TOKEN': csrfToken,
                 'Accept': 'application/json'
             }
         })
-        .then(response => response.json())
+        .then(res => res.json())
         .then(data => {
             const tbody = document.getElementById('lantai-table-body');
             tbody.innerHTML = '';
-            if (data.length === 0) {
+            if (!data.length) {
                 tbody.innerHTML = '<tr><td colspan="4" class="text-center">No data available</td></tr>';
                 return;
             }
-            data.forEach(item => {
+            data.forEach((item, index) => {
                 const row = document.createElement('tr');
                 row.setAttribute('data-id', item.id);
                 row.innerHTML = `
-                    <td>${item.id}</td>
+                    <td>${index + 1}</td>
                     <td>${item.nama}</td>
                     <td>${item.created_at}</td>
                     <td>
@@ -192,147 +211,35 @@ document.addEventListener('DOMContentLoaded', function() {
                 `;
                 tbody.appendChild(row);
             });
-            // Reattach event listeners for edit and delete buttons
             attachButtonListeners();
         })
-        .catch(error => {
-            console.error('Error fetching table data:', error);
-            showAlert('danger', 'Failed to refresh table data.');
-        });
+        .catch(() => showAlert('danger', 'Gagal memuat data.'));
     }
 
-    // Function to show alerts
-    function showAlert(type, message) {
-        const alertContainer = document.getElementById('alert-container');
-        const alert = document.createElement('div');
-        alert.className = `alert alert-${type} alert-dismissible fade show`;
-        alert.setAttribute('role', 'alert');
-        alert.innerHTML = `
-            ${message}
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        `;
-        alertContainer.innerHTML = '';
-        alertContainer.appendChild(alert);
-        setTimeout(() => {
-            alert.classList.remove('show');
-            setTimeout(() => alert.remove(), 150);
-        }, 3000);
-    }
-
-    // Function to attach event listeners to buttons
     function attachButtonListeners() {
-        document.querySelectorAll('.edit-btn').forEach(button => {
-            button.addEventListener('click', function() {
-                const id = this.getAttribute('data-id');
-                const nama = this.getAttribute('data-nama');
-                document.getElementById('edit_id').value = id;
-                document.getElementById('edit_nama').value = nama;
-                document.getElementById('editLantaiForm').action = `{{ url('dashboard/master-lantai') }}/${id}`;
-            });
+        document.querySelectorAll('.edit-btn').forEach(btn => {
+            btn.onclick = function() {
+                document.getElementById('edit_id').value = this.dataset.id;
+                document.getElementById('edit_nama').value = this.dataset.nama;
+                document.getElementById('editLantaiForm').action = `{{ url('dashboard/master-lantai') }}/${this.dataset.id}`;
+            };
         });
-
-        document.querySelectorAll('.delete-btn').forEach(button => {
-            button.addEventListener('click', function() {
-                const id = this.getAttribute('data-id');
-                document.getElementById('delete_id').value = id;
-                document.getElementById('deleteLantaiForm').action = `{{ url('dashboard/master-lantai') }}/${id}`;
-            });
+        document.querySelectorAll('.delete-btn').forEach(btn => {
+            btn.onclick = function() {
+                document.getElementById('delete_id').value = this.dataset.id;
+                document.getElementById('deleteLantaiForm').action = `{{ url('dashboard/master-lantai') }}/${this.dataset.id}`;
+            };
         });
     }
 
-    // Initial attachment of button listeners
-    attachButtonListeners();
-
-    // AJAX for Add Form
-    document.getElementById('addLantaiForm').addEventListener('submit', function(e) {
-        e.preventDefault();
-        const form = this;
-        const formData = new FormData(form);
-
-        fetch(form.action, {
-            method: 'POST',
-            body: formData,
-            headers: {
-                'X-CSRF-TOKEN': csrfToken,
-                'Accept': 'application/json'
-            }
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                form.reset();
-                document.getElementById('addLantaiModal').querySelector('.btn-close').click();
-                showAlert('success', data.message);
-                refreshTable();
-            } else {
-                showAlert('danger', data.message || 'Failed to add floor');
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            showAlert('danger', 'An error occurred. Please try again.');
-        });
+    // Event search input
+    document.getElementById('searchInput').addEventListener('input', function() {
+        refreshTable(this.value.trim());
     });
 
-    // AJAX for Edit Form
-    document.getElementById('editLantaiForm').addEventListener('submit', function(e) {
-        e.preventDefault();
-        const form = this;
-        const formData = new FormData(form);
-
-        fetch(form.action, {
-            method: 'POST', // Laravel handles PUT via _method
-            body: formData,
-            headers: {
-                'X-CSRF-TOKEN': csrfToken,
-                'Accept': 'application/json'
-            }
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                document.getElementById('editLantaiModal').querySelector('.btn-close').click();
-                showAlert('success', data.message);
-                refreshTable();
-            } else {
-                showAlert('danger', data.message || 'Failed to update floor');
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            showAlert('danger', 'An error occurred. Please try again.');
-        });
-    });
-
-    // AJAX for Delete Form
-    document.getElementById('deleteLantaiForm').addEventListener('submit', function(e) {
-        e.preventDefault();
-        const form = this;
-        const formData = new FormData(form);
-
-        fetch(form.action, {
-            method: 'POST', // Laravel handles DELETE via _method
-            body: formData,
-            headers: {
-                'X-CSRF-TOKEN': csrfToken,
-                'Accept': 'application/json'
-            }
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                document.getElementById('deleteLantaiModal').querySelector('.btn-close').click();
-                showAlert('success', data.message);
-                refreshTable();
-            } else {
-                showAlert('danger', data.message || 'Failed to delete floor');
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            showAlert('danger', 'An error occurred. Please try again.');
-        });
-    });
+    // Initial load
+    refreshTable();
 });
+
 </script>
 @endsection

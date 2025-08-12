@@ -1,12 +1,15 @@
 <?php
 
 use App\Http\Controllers\AdminAuthController;
+use App\Http\Controllers\kosController;
 use App\Http\Controllers\lantaiController;
 use App\Http\Controllers\lokasiController;
+use App\Http\Controllers\paketHargaController;
 use App\Http\Controllers\settingController;
 use App\Http\Controllers\tipeKosController;
+use App\Http\Controllers\transaksiController;
 use App\Http\Controllers\userController;
-use App\Http\Controllers\FasilitasController;
+use App\Http\Controllers\fasilitasController;
 use Illuminate\Support\Facades\Route;
 
 // ====================
@@ -25,11 +28,11 @@ Route::post('/logout', [AdminAuthController::class, 'logout'])->name('admin.logo
 Route::prefix('dashboard')->middleware('auth:admin')->group(function () {
 
     // Fasilitas CRUD Routes
-    Route::get('/master-fasilitas', [FasilitasController::class, 'index'])->name('fasilitas.index');
-    Route::get('/master-fasilitas/data', [FasilitasController::class, 'data'])->name('fasilitas.data');
-    Route::post('/master-fasilitas', [FasilitasController::class, 'store'])->name('fasilitas.store');
-    Route::put('/master-fasilitas/{id}', [FasilitasController::class, 'update'])->name('fasilitas.update');
-    Route::delete('/master-fasilitas/{id}', [FasilitasController::class, 'destroy'])->name('fasilitas.destroy');
+    Route::get('/master-fasilitas', [fasilitasController::class, 'index'])->name('fasilitas.index');
+    Route::get('/master-fasilitas/data', [fasilitasController::class, 'data'])->name('fasilitas.data');
+    Route::post('/master-fasilitas', [fasilitasController::class, 'store'])->name('fasilitas.store');
+    Route::put('/master-fasilitas/{id}', [fasilitasController::class, 'update'])->name('fasilitas.update');
+    Route::delete('/master-fasilitas/{id}', [fasilitasController::class, 'destroy'])->name('fasilitas.destroy');
 
     // Lantai Routes
     Route::get('/master-lantai', [lantaiController::class, 'index'])->name('lantai.index');
@@ -59,6 +62,33 @@ Route::prefix('dashboard')->middleware('auth:admin')->group(function () {
     Route::put('/master-user/{id}', [userController::class, 'update'])->name('user.update');
     Route::delete('/master-user/{id}', [userController::class, 'destroy'])->name('user.destroy');
 
+    //master kos Routes
+    Route::get('/master-kos', [kosController::class, 'index'])->name('kos.index');
+    Route::get('/master-kos/data', [kosController::class, 'data'])->name('kos.data');
+    Route::post('/master-kos', [kosController::class, 'store'])->name('kos.store');
+    Route::put('/master-kos/{id}', [kosController::class, 'update'])->name('kos.update');
+    Route::delete('/master-kos/{id}', [kosController::class, 'destroy'])->name('kos.destroy');
+    
+    // Kos Detail routes
+    Route::get('/kos-detail/{kos_id}', [KosController::class, 'detail'])->name('kos.detail');
+    Route::get('/kos-detail/{kos_id}/data', [KosController::class, 'detailData'])->name('kos.detail.data');
+    Route::post('/kos-detail/{kos_id}', [KosController::class, 'detailStore'])->name('kos.detail.store');
+    Route::put('/kos-detail/{id}', [KosController::class, 'detailUpdate'])->name('kos.detail.update');
+    Route::delete('/kos-detail/{id}', [KosController::class, 'detailDestroy'])->name('kos.detail.destroy');
+
+    // Placeholder for Gallery route
+    Route::get('/dashboard/kos/{kos_id}/gallery/{kamar_id}', [KosController::class, 'gallery'])->name('kos.gallery');
+    Route::get('/dashboard/kos/{kos_id}/gallery/{kamar_id}/data', [KosController::class, 'galleryData'])->name('kos.gallery.data');
+    Route::post('/dashboard/kos/{kos_id}/gallery/{kamar_id}', [KosController::class, 'galleryStore'])->name('kos.gallery.store');
+    Route::delete('/dashboard/kos/{kos_id}/gallery/{kamar_id}/{id}', [KosController::class, 'galleryDestroy'])->name('kos.gallery.destroy');
+
+    // Paket Harga Routes
+    Route::get('/master-paket-harga', [paketHargaController::class, 'index'])->name('paket-harga.index');
+    Route::get('/master-paket-harga/data', [paketHargaController::class, 'data'])->name('paket-harga.data');
+    Route::post('/master-paket-harga', [paketHargaController::class, 'store'])->name('paket-harga.store');
+    Route::put('/master-paket-harga/{paketHarga}', [paketHargaController::class, 'update'])->name('paket-harga.update');
+    Route::delete('/master-paket-harga/{paketHarga}', [paketHargaController::class, 'destroy'])->name('paket-harga.destroy');
+    
     // Settings Routes
     Route::get('/settings', [settingController::class, 'index'])->name('settings.index');
     Route::post('/settings/title-sistem', [settingController::class, 'updateTitleSistem'])->name('settings.update.title_sistem');
@@ -71,4 +101,12 @@ Route::prefix('dashboard')->middleware('auth:admin')->group(function () {
     Route::post('/settings/admin', [settingController::class, 'storeAdmin'])->name('settings.store.admin');
     Route::post('/settings/admin/update', [settingController::class, 'updateAdmin'])->name('settings.update.admin');
     Route::delete('/settings/admin/{id}', [settingController::class, 'deleteAdmin'])->name('settings.delete.admin');
+
+    // Transaksi Routes
+    Route::get('/transaksi', [transaksiController::class, 'index'])->name('transaksi.index');           // ambil semua transaksi
+    Route::get('/transaksi/{id}', [transaksiController::class, 'show']);        // ambil detail transaksi
+    Route::put('/transaksi/{id}/status', [transaksiController::class, 'updateStatus']); // update status pembayaran
+    Route::post('/transaksi/{id}/pembayaran', [TransaksiController::class, 'pembayaran']);
+    Route::delete('/transaksi/{id}', [TransaksiController::class, 'destroy'])->name('transaksi.destroy');
+
 });

@@ -5,11 +5,16 @@
 @section('content')
 <div class="dashboard-content">
     <h2 class="mb-4">Master Lokasi</h2>
-    <div class="d-flex justify-content-between mb-3">
-        <h5>List Lokasi</h5>
-        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addLokasiModal">
-            <i class="icofont-plus"></i> Tambah Lokasi
-        </button>
+    <!-- Search input -->
+    <div class="mb-3 row" >
+        <div class="col-6">
+            <input type="text" id="searchInput" class="form-control" placeholder="Cari Lokasi...">
+        </div>
+        <div class="col-6">
+            <button class="btn btn-primary" style="float: inline-end;" data-bs-toggle="modal" data-bs-target="#addLokasiModal">
+                <i class="icofont-plus"></i> Tambah Kos
+            </button>
+        </div>
     </div>
 
     <!-- Success/Error Messages -->
@@ -33,7 +38,7 @@
         <table class="">
             <thead class="table-light">
                 <tr>
-                    <th>ID</th>
+                    <th>No</th>
                     <th>Nama</th>
                     <th>Created At</th>
                     <th>Actions</th>
@@ -150,7 +155,7 @@
 @section('scripts')
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // Check for CSRF token
+    // Ambil CSRF token dari meta
     const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content;
     if (!csrfToken) {
         console.error('CSRF token not found. Please add <meta name="csrf-token" content="{{ csrf_token() }}"> to the layout.');
@@ -158,50 +163,9 @@ document.addEventListener('DOMContentLoaded', function() {
         return;
     }
 
-    // Function to refresh table data
-    function refreshTable() {
-        fetch('{{ route('lokasi.data') }}', {
-            headers: {
-                'X-CSRF-TOKEN': csrfToken,
-                'Accept': 'application/json'
-            }
-        })
-        .then(response => response.json())
-        .then(data => {
-            const tbody = document.getElementById('lokasi-table-body');
-            tbody.innerHTML = '';
-            if (data.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="4" class="text-center">No data available</td></tr>';
-                return;
-            }
-            data.forEach(item => {
-                const row = document.createElement('tr');
-                row.setAttribute('data-id', item.id);
-                row.innerHTML = `
-                    <td>${item.id}</td>
-                    <td>${item.nama}</td>
-                    <td>${item.created_at}</td>
-                    <td>
-                        <button class="btn btn-sm btn-warning edit-btn" data-id="${item.id}" data-nama="${item.nama}" data-bs-toggle="modal" data-bs-target="#editLokasiModal">
-                            <i class="icofont-edit"></i> Edit
-                        </button>
-                        <button class="btn btn-sm btn-danger delete-btn" data-id="${item.id}" data-bs-toggle="modal" data-bs-target="#deleteLokasiModal">
-                            <i class="icofont-trash"></i> Delete
-                        </button>
-                    </td>
-                `;
-                tbody.appendChild(row);
-            });
-            // Reattach event listeners for edit and delete buttons
-            attachButtonListeners();
-        })
-        .catch(error => {
-            console.error('Error fetching table data:', error);
-            showAlert('danger', 'Failed to refresh table data.');
-        });
-    }
+    const searchInput = document.getElementById('searchInput');
 
-    // Function to show alerts
+    // Fungsi tampilkan alert
     function showAlert(type, message) {
         const alertContainer = document.getElementById('alert-container');
         const alert = document.createElement('div');
@@ -219,7 +183,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }, 3000);
     }
 
-    // Function to attach event listeners to buttons
+    // Fungsi attach event listener ke tombol Edit dan Delete
     function attachButtonListeners() {
         document.querySelectorAll('.edit-btn').forEach(button => {
             button.addEventListener('click', function() {
@@ -240,10 +204,66 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // Initial attachment of button listeners
+    // Fungsi refresh tabel data, menerima param search (string)
+    function refreshTable(search = '') {
+        const url = new URL('{{ route('lokasi.data') }}', window.location.origin);
+        if (search) {
+            url.searchParams.append('search', search);
+        }
+
+        fetch(url.toString(), {
+            headers: {
+                'X-CSRF-TOKEN': csrfToken,
+                'Accept': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            const tbody = document.getElementById('lokasi-table-body');
+            tbody.innerHTML = '';
+            if (data.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="4" class="text-center">No data available</td></tr>';
+                return;
+            }
+            data.forEach((item, index) => {
+                const row = document.createElement('tr');
+                row.setAttribute('data-id', item.id);
+                row.innerHTML = `
+                    <td>${index + 1}</td>
+                    <td>${item.nama}</td>
+                    <td>${item.created_at}</td>
+                    <td>
+                        <button class="btn btn-sm btn-warning edit-btn" data-id="${item.id}" data-nama="${item.nama}" data-bs-toggle="modal" data-bs-target="#editLokasiModal">
+                            <i class="icofont-edit"></i> Edit
+                        </button>
+                        <button class="btn btn-sm btn-danger delete-btn" data-id="${item.id}" data-bs-toggle="modal" data-bs-target="#deleteLokasiModal">
+                            <i class="icofont-trash"></i> Delete
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+            attachButtonListeners();
+        })
+        .catch(error => {
+            console.error('Error fetching table data:', error);
+            showAlert('danger', 'Failed to refresh table data.');
+        });
+    }
+
+    // Event listener untuk input search
+    searchInput.addEventListener('input', function() {
+        const query = this.value.trim();
+        refreshTable(query);
+    });
+
+    // Initial load data tanpa search
+    refreshTable();
+
+    // Attach listeners awal
     attachButtonListeners();
 
-    // AJAX for Add Form
+    // AJAX Submit Add Form
     document.getElementById('addLokasiForm').addEventListener('submit', function(e) {
         e.preventDefault();
         const form = this;
@@ -257,82 +277,77 @@ document.addEventListener('DOMContentLoaded', function() {
                 'Accept': 'application/json'
             }
         })
-        .then(response => response.json())
+        .then(res => res.json())
         .then(data => {
             if (data.success) {
                 form.reset();
-                document.getElementById('addLokasiModal').querySelector('.btn-close').click();
+                const modal = bootstrap.Modal.getInstance(document.getElementById('addLokasiModal'));
+                modal.hide();
                 showAlert('success', data.message);
-                refreshTable();
+                refreshTable(searchInput.value.trim());
             } else {
                 showAlert('danger', data.message || 'Failed to add location');
             }
         })
-        .catch(error => {
-            console.error('Error:', error);
-            showAlert('danger', 'An error occurred. Please try again.');
-        });
+        .catch(() => showAlert('danger', 'An error occurred. Please try again.'));
     });
 
-    // AJAX for Edit Form
+    // AJAX Submit Edit Form
     document.getElementById('editLokasiForm').addEventListener('submit', function(e) {
         e.preventDefault();
         const form = this;
         const formData = new FormData(form);
 
         fetch(form.action, {
-            method: 'POST', // Laravel handles PUT via _method
+            method: 'POST', // Laravel PUT via _method
             body: formData,
             headers: {
                 'X-CSRF-TOKEN': csrfToken,
                 'Accept': 'application/json'
             }
         })
-        .then(response => response.json())
+        .then(res => res.json())
         .then(data => {
             if (data.success) {
-                document.getElementById('editLokasiModal').querySelector('.btn-close').click();
+                const modal = bootstrap.Modal.getInstance(document.getElementById('editLokasiModal'));
+                modal.hide();
                 showAlert('success', data.message);
-                refreshTable();
+                refreshTable(searchInput.value.trim());
             } else {
                 showAlert('danger', data.message || 'Failed to update location');
             }
         })
-        .catch(error => {
-            console.error('Error:', error);
-            showAlert('danger', 'An error occurred. Please try again.');
-        });
+        .catch(() => showAlert('danger', 'An error occurred. Please try again.'));
     });
 
-    // AJAX for Delete Form
+    // AJAX Submit Delete Form
     document.getElementById('deleteLokasiForm').addEventListener('submit', function(e) {
         e.preventDefault();
         const form = this;
         const formData = new FormData(form);
 
         fetch(form.action, {
-            method: 'POST', // Laravel handles DELETE via _method
+            method: 'POST', // Laravel DELETE via _method
             body: formData,
             headers: {
                 'X-CSRF-TOKEN': csrfToken,
                 'Accept': 'application/json'
             }
         })
-        .then(response => response.json())
+        .then(res => res.json())
         .then(data => {
             if (data.success) {
-                document.getElementById('deleteLokasiModal').querySelector('.btn-close').click();
+                const modal = bootstrap.Modal.getInstance(document.getElementById('deleteLokasiModal'));
+                modal.hide();
                 showAlert('success', data.message);
-                refreshTable();
+                refreshTable(searchInput.value.trim());
             } else {
                 showAlert('danger', data.message || 'Failed to delete location');
             }
         })
-        .catch(error => {
-            console.error('Error:', error);
-            showAlert('danger', 'An error occurred. Please try again.');
-        });
+        .catch(() => showAlert('danger', 'An error occurred. Please try again.'));
     });
+
 });
 </script>
 @endsection
