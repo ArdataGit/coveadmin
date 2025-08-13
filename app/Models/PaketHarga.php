@@ -19,6 +19,11 @@ class PaketHarga extends Model
         'pertigabulan_harga',
         'perenambulan_harga',
         'pertahun_harga',
+        'ketersediaan', // kolom json
+    ];
+
+    protected $casts = [
+        'ketersediaan' => 'array', 
     ];
 
     public function kos()

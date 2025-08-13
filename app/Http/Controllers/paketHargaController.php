@@ -45,7 +45,13 @@ class paketHargaController extends Controller
             'pertigabulan_harga' => 'nullable|integer|min:0',
             'perenambulan_harga' => 'nullable|integer|min:0',
             'pertahun_harga' => 'nullable|integer|min:0',
+            'ketersediaan' => 'nullable|json', // validasi JSON string (optional)
         ]);
+
+        // Jika ketersediaan dikirim sebagai array, encode ke json
+        if (isset($validated['ketersediaan']) && is_array($validated['ketersediaan'])) {
+            $validated['ketersediaan'] = json_encode($validated['ketersediaan']);
+        }
 
         PaketHarga::create($validated);
 
@@ -65,7 +71,12 @@ class paketHargaController extends Controller
             'pertigabulan_harga' => 'nullable|integer|min:0',
             'perenambulan_harga' => 'nullable|integer|min:0',
             'pertahun_harga' => 'nullable|integer|min:0',
+            'ketersediaan' => 'nullable|json',
         ]);
+
+        if (isset($validated['ketersediaan']) && is_array($validated['ketersediaan'])) {
+            $validated['ketersediaan'] = json_encode($validated['ketersediaan']);
+        }
 
         $paketHarga->update($validated);
 

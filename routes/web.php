@@ -5,6 +5,7 @@ use App\Http\Controllers\kosController;
 use App\Http\Controllers\lantaiController;
 use App\Http\Controllers\lokasiController;
 use App\Http\Controllers\paketHargaController;
+use App\Http\Controllers\pembayaranController;
 use App\Http\Controllers\settingController;
 use App\Http\Controllers\tipeKosController;
 use App\Http\Controllers\transaksiController;
@@ -106,7 +107,12 @@ Route::prefix('dashboard')->middleware('auth:admin')->group(function () {
     Route::get('/transaksi', [transaksiController::class, 'index'])->name('transaksi.index');           // ambil semua transaksi
     Route::get('/transaksi/{id}', [transaksiController::class, 'show']);        // ambil detail transaksi
     Route::put('/transaksi/{id}/status', [transaksiController::class, 'updateStatus']); // update status pembayaran
-    Route::post('/transaksi/{id}/pembayaran', [TransaksiController::class, 'pembayaran']);
-    Route::delete('/transaksi/{id}', [TransaksiController::class, 'destroy'])->name('transaksi.destroy');
+    Route::post('/transaksi/{id}/pembayaran', [transaksiController::class, 'pembayaran']);
+    Route::delete('/transaksi/{id}', [transaksiController::class, 'destroy'])->name('transaksi.destroy');
+
+    Route::get('/pembayaran/{transaksi_id}', [pembayaranController::class, 'index'])->name('pembayaran.index');
+    Route::post('/pembayaran', [pembayaranController::class, 'store'])->name('pembayaran.store');
+    Route::put('/pembayaran/{id}', [pembayaranController::class, 'update'])->name('pembayaran.update');
+    Route::delete('/pembayaran/{id}', [pembayaranController::class, 'destroy'])->name('pembayaran.destroy');
 
 });

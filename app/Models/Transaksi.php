@@ -44,4 +44,11 @@ class Transaksi extends Model
     {
         return $this->belongsTo(PaketHarga::class);
     }
+    /**
+     * Relationship to Pembayaran
+     */
+    public function pembayaran()
+    {
+        return $this->hasMany(Pembayaran::class, 'transaksi_id', 'id');
+    }
 }
