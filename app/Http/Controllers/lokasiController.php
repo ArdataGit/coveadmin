@@ -76,4 +76,21 @@ class lokasiController extends Controller
         $lokasi->delete();
         return redirect()->route('lokasi.index')->with('success', 'Location deleted successfully');
     }
+
+    
+    public function getAll()
+    {
+        $lokasi = Lokasi::orderBy('created_at', 'desc')->get()->map(function ($item) {
+            return [
+                'id'         => $item->id,
+                'nama'       => $item->nama,
+                'created_at' => $item->created_at->format('d M Y H:i'),
+            ];
+        });
+
+        return response()->json([
+            'success' => true,
+            'data'    => $lokasi
+        ]);
+    }
 }

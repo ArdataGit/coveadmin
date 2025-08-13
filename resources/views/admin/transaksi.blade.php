@@ -29,11 +29,8 @@
                     <th>Tanggal</th>
                     <th>Periode</th>
                     <th>Harga</th>
-                    <th>Nominal</th>
-                    <th>Tipe Bayar</th>
-                    <th>Jenis Bayar</th>
+                    <th>Pembayaran</th>
                     <th>Status</th>
-                    <th>Metode Bayar</th>
                     <th>Aksi</th>
                 </tr>
             </thead>
@@ -52,42 +49,46 @@
                             {{ $trx->end_order_date ? date('d-m-Y', strtotime($trx->end_order_date)) : '-' }}
                         </td>
                         <td>{{ number_format($trx->harga, 0, ',', '.') }}</td>
-                        <td>{{ number_format($trx->nominal, 0, ',', '.') }}</td>
-                        <td>{{ ucfirst($trx->tipe_bayar) }}</td>
-                        <td>{{ ucfirst(str_replace('_', ' ', $trx->jenis_bayar)) }}</td>
-                        <td>{{ ucfirst($trx->status) }}</td>
-                        <td>{{ ucfirst($trx->methode_pembayaran) }}</td>
                         <td>
-                            <button class="btn btn-sm btn-success pembayaran-btn"
-                                data-id="{{ $trx->id }}"
-                                data-no_order="{{ $trx->no_order }}"
-                                data-user_id="{{ $trx->user_id }}"
-                                data-kos_id="{{ $trx->kos_id }}"
-                                data-kamar_id="{{ $trx->kamar_id }}"
-                                data-paket_id="{{ $trx->paket_id }}"
-                                data-tanggal="{{ now()->format('Y-m-d') }}"
-                                data-start_order_date="{{ $trx->start_order_date }}"
-                                data-end_order_date="{{ $trx->end_order_date }}"
-                                data-harga="{{ $trx->harga }}"
-                                data-quantity="{{ $trx->quantity }}"
-                                data-tipe_bayar="{{ $trx->tipe_bayar }}"
-                                data-jenis_bayar="{{ $trx->jenis_bayar }}"
-                                data-methode_pembayaran="{{ $trx->methode_pembayaran }}"
-                                data-bs-toggle="modal" 
-                                data-bs-target="#pembayaranBaruModal">
-                                <i class="icofont-money-bag"></i>
-                            </button>
+                            @if ($trx->pembayaran->isEmpty())
+                                <span>Belum ada pembayaran</span>
+                            @else
+                                <ul>
+                                    @foreach ($trx->pembayaran as $pembayaran)
+                                        <li>
+                                            {{ date('d-m-Y', strtotime($pembayaran->tanggal)) }}: 
+                                            {{ number_format($pembayaran->nominal, 0, ',', '.') }} 
+                                            ({{ ucfirst($pembayaran->tipe_bayar) }} - 
+                                            {{ ucfirst(str_replace('_', ' ', $pembayaran->jenis_bayar)) }})
+                                            @if ($pembayaran->keterangan)
+                                                - {{ $pembayaran->keterangan }}
+                                            @endif
+                                        </li>
+                                    @endforeach
+                                </ul>
+                                <strong>Total: {{ number_format($trx->pembayaran->sum('nominal'), 0, ',', '.') }}</strong>
+                            @endif
+                        </td>
+                        <td>{{ ucfirst($trx->status) }}</td>
+                        <td>
+                            <a href="{{ route('pembayaran.index', $trx->id) }}" class="btn btn-sm btn-success">
+                                <i class="icofont-money-bag"></i> Bayar
+                            </a>
+                            
+                            <a href="{{ route('transaksi.invoice', $trx->id) }}" target="_blank" class="btn btn-sm btn-primary">
+                                <i class="icofont-print"></i> Invoice
+                            </a>
                             <button class="btn btn-sm btn-danger delete-btn"
                                 data-id="{{ $trx->id }}"
                                 data-bs-toggle="modal"
                                 data-bs-target="#deleteTransaksiModal">
                                 <i class="icofont-trash"></i>
                             </button>
-                        </td>
 
+                        </td>
                     </tr>
                 @empty
-                    <tr><td colspan="14" class="text-center">Tidak ada data</td></tr>
+                    <tr><td colspan="11" class="text-center">Tidak ada data</td></tr>
                 @endforelse
             </tbody>
         </table>
@@ -106,7 +107,11 @@
                 <div class="modal-body">
                     <div class="mb-3">
                         <label>User</label>
-                        <select name="user_id" id="edit_user_id" class="form-control"></select>
+                        <select name="user_id" id="edit_user_id" class="form-control">
+                            @foreach ($users as $user)
+                                <option value="{{ $user->id }}">{{ $user->nama }}</option>
+                            @endforeach
+                        </select>
                     </div>
                     <div class="mb-3">
                         <label>No Order</label>
@@ -114,15 +119,30 @@
                     </div>
                     <div class="mb-3">
                         <label>Kos</label>
-                        <select name="kos_id" id="edit_kos_id" class="form-control"></select>
+                        <select name="kos_id" id="edit_kos_id" class="form-control">
+                            <option value="">Pilih Kos</option>
+                            @foreach ($kos as $k)
+                                <option value="{{ $k->id }}">{{ $k->nama }}</option>
+                            @endforeach
+                        </select>
                     </div>
                     <div class="mb-3">
                         <label>Kamar</label>
-                        <select name="kamar_id" id="edit_kamar_id" class="form-control"></select>
+                        <select name="kamar_id" id="edit_kamar_id" class="form-control">
+                            <option value="">Pilih Kamar</option>
+                            @foreach ($kamars as $kamar)
+                                <option value="{{ $kamar->id }}">{{ $kamar->nama }}</option>
+                            @endforeach
+                        </select>
                     </div>
                     <div class="mb-3">
                         <label>Paket</label>
-                        <select name="paket_id" id="edit_paket_id" class="form-control"></select>
+                        <select name="paket_id" id="edit_paket_id" class="form-control">
+                            <option value="">Pilih Paket</option>
+                            @foreach ($pakets as $paket)
+                                <option value="{{ $paket->id }}">{{ $paket->nama }}</option>
+                            @endforeach
+                        </select>
                     </div>
                     <div class="mb-3">
                         <label>Tanggal</label>
@@ -141,29 +161,6 @@
                         <input type="number" name="harga" id="edit_harga" class="form-control">
                     </div>
                     <div class="mb-3">
-                        <label>Nominal</label>
-                        <input type="number" name="nominal" id="edit_nominal" class="form-control">
-                    </div>
-                    <div class="mb-3">
-                        <label>Keterangan</label>
-                        <textarea name="keterangan" id="edit_keterangan" class="form-control"></textarea>
-                    </div>
-                    <div class="mb-3">
-                        <label>Tipe Bayar</label>
-                        <select name="tipe_bayar" id="edit_tipe_bayar" class="form-control">
-                            <option value="dp">DP</option>
-                            <option value="full">Full</option>
-                        </select>
-                    </div>
-                    <div class="mb-3">
-                        <label>Jenis Bayar</label>
-                        <select name="jenis_bayar" id="edit_jenis_bayar" class="form-control">
-                            <option value="biaya_kos">Biaya Kos</option>
-                            <option value="tagihan">Tagihan</option>
-                            <option value="denda">Denda</option>
-                        </select>
-                    </div>
-                    <div class="mb-3">
                         <label>Status</label>
                         <select name="status" id="edit_status" class="form-control">
                             <option value="paid">Paid</option>
@@ -171,46 +168,10 @@
                             <option value="cancel">Cancel</option>
                         </select>
                     </div>
-                    <div class="mb-3">
-                        <label>Metode Pembayaran</label>
-                        <input type="text" name="methode_pembayaran" id="edit_methode_pembayaran" class="form-control">
-                    </div>
                 </div>
                 <div class="modal-footer">
                     <button class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
                     <button class="btn btn-primary">Update</button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
-
-<!-- Modal Pembayaran Baru -->
-<div class="modal fade" id="pembayaranBaruModal" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <form id="pembayaranBaruForm" method="POST">
-                @csrf
-                <div class="modal-header"><h5>Tambah Pembayaran Baru</h5></div>
-                <div class="modal-body">
-                    <input type="hidden" name="id" id="pay_id">
-
-                    <div class="mb-3">
-                        <label>No Order</label>
-                        <input type="text" name="no_order" id="pay_no_order" class="form-control" readonly>
-                    </div>
-                    <div class="mb-3">
-                        <label>Nominal</label>
-                        <input type="number" name="nominal" id="pay_nominal" class="form-control" required>
-                    </div>
-                    <div class="mb-3">
-                        <label>Keterangan</label>
-                        <textarea name="keterangan" id="pay_keterangan" class="form-control"></textarea>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
-                    <button class="btn btn-success">Simpan</button>
                 </div>
             </form>
         </div>
@@ -240,12 +201,12 @@
 @section('scripts')
 <script>
 document.addEventListener('DOMContentLoaded', () => {
+    // Edit transaksi
     document.querySelectorAll('.edit-btn').forEach(btn => {
         btn.addEventListener('click', function(){
             const fields = [
-                'id','no_order','user_id','kos_id','kamar_id','paket_id',
-                'tanggal','start_order_date','end_order_date','harga','nominal',
-                'keterangan','tipe_bayar','jenis_bayar','status','methode_pembayaran'
+                'id', 'no_order', 'user_id', 'kos_id', 'kamar_id', 'paket_id',
+                'tanggal', 'start_order_date', 'end_order_date', 'harga', 'status'
             ];
             fields.forEach(field => {
                 const el = document.getElementById('edit_' + field);
@@ -255,39 +216,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    document.querySelectorAll('.delete-btn').forEach(btn => {
-        btn.addEventListener('click', function(){
-            document.getElementById('delete_id').value = this.dataset.id;
-            document.getElementById('deleteTransaksiForm').action = `/dashboard/transaksi/${this.dataset.id}`;
-        });
-    });
-
-    // Edit transaksi lama
-    document.querySelectorAll('.edit-btn').forEach(btn => {
-        btn.addEventListener('click', function(){
-            const fields = [
-                'id','no_order','user_id','kos_id','kamar_id','paket_id',
-                'tanggal','start_order_date','end_order_date','harga','nominal',
-                'keterangan','tipe_bayar','jenis_bayar','status','methode_pembayaran'
-            ];
-            fields.forEach(field => {
-                const el = document.getElementById('edit_' + field);
-                if (el) el.value = this.dataset[field];
-            });
-            document.getElementById('editTransaksiForm').action = `/dashboard/transaksi/${this.dataset.id}`;
-        });
-    });
-
-    // Pembayaran baru
-    document.querySelectorAll('.pembayaran-btn').forEach(btn => {
-        btn.addEventListener('click', function(){
-            document.getElementById('pay_id').value = this.dataset.id;
-            document.getElementById('pay_no_order').value = this.dataset.no_order;
-            document.getElementById('pembayaranBaruForm').action = `/dashboard/transaksi/${this.dataset.id}/pembayaran`;
-        });
-    });
-
-    // Hapus transaksi
+    // Delete transaksi
     document.querySelectorAll('.delete-btn').forEach(btn => {
         btn.addEventListener('click', function(){
             document.getElementById('delete_id').value = this.dataset.id;

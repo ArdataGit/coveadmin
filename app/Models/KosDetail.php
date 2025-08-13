@@ -46,4 +46,9 @@ class KosDetail extends Model
     {
         return $this->hasMany(GalleryKos::class, 'kamar_id');
     }
+
+        public function paketHarga()
+    {
+        return $this->hasOne(PaketHarga::class, 'kamar_id');
+    }
 }

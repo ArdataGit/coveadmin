@@ -111,4 +111,20 @@ class FasilitasController extends Controller
             return redirect()->route('fasilitas.index')->with('error', 'Failed to delete facility: ' . $e->getMessage());
         }
     }
+
+    public function getAll()
+    {
+        $fasilitas = Fasilitas::orderBy('created_at', 'desc')->get()->map(function ($item) {
+            return [
+                'id'         => $item->id,
+                'nama'       => $item->nama,
+                'created_at' => $item->created_at->format('d M Y H:i'),
+            ];
+        });
+
+        return response()->json([
+            'success' => true,
+            'data'    => $fasilitas
+        ]);
+    }
 }

@@ -6,9 +6,11 @@ use App\Models\Kos;
 use App\Models\KosDetail;
 use App\Models\PaketHarga;
 use App\Models\Transaksi;
+use App\Models\Pembayaran;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
+use PDF;
 
 class TransaksiController extends Controller
 {
@@ -17,7 +19,7 @@ class TransaksiController extends Controller
      */
     public function index()
     {
-        $transaksis = Transaksi::with(['user', 'kos', 'kamar'])->latest()->get();
+        $transaksis = Transaksi::with(['user', 'kos', 'kamar', 'pembayaran'])->latest()->get();
         $users = User::all();
         $kos = Kos::all();
         $kamars = KosDetail::all();
@@ -40,10 +42,7 @@ class TransaksiController extends Controller
         $request->validate([
             'user_id'           => 'required|exists:users,id',
             'tanggal'           => 'required|date',
-            'tipe_bayar'        => 'required|in:dp,full',
-            'jenis_bayar'       => 'required|in:biaya_kos,tagihan,denda',
             'harga'             => 'required|integer|min:0',
-            'nominal'           => 'required|integer|min:0',
             'quantity'          => 'nullable|integer|min:1',
             'start_order_date'  => 'nullable|date',
             'end_order_date'    => 'nullable|date|after_or_equal:start_order_date',
@@ -51,7 +50,7 @@ class TransaksiController extends Controller
 
         $transaksi = Transaksi::create([
             'user_id'            => $request->user_id,
-            'no_order'           => 'ORD-' . strtoupper(Str::random(8)),
+            'no_order'           => 'INV/' . strtoupper(Str::random(8)),
             'tanggal'            => $request->tanggal,
             'start_order_date'   => $request->start_order_date,
             'end_order_date'     => $request->end_order_date,
@@ -59,18 +58,13 @@ class TransaksiController extends Controller
             'kamar_id'           => $request->kamar_id,
             'paket_id'           => $request->paket_id,
             'harga'              => $request->harga,
-            'nominal'            => $request->nominal,
             'quantity'           => $request->quantity ?? 1,
-            'keterangan'         => $request->keterangan,
-            'tipe_bayar'         => $request->tipe_bayar,
-            'jenis_bayar'        => $request->jenis_bayar,
-            'methode_pembayaran' => $request->methode_pembayaran,
-            'status'             => 'unpaid',
+            'status'             => 'pending',
         ]);
 
         return response()->json([
             'message' => 'Transaksi berhasil dibuat',
-            'data'    => $transaksi
+            'data'    => $transaksi,
         ], 201);
     }
 
@@ -84,20 +78,23 @@ class TransaksiController extends Controller
                 'status' => 'required|in:paid,unpaid,cancel',
             ]);
 
-            $transaksi = Transaksi::findOrFail($id);
+            $transaksi = Transaksi::with('pembayaran')->findOrFail($id);
             $transaksi->status = $request->status;
             $transaksi->save();
 
             // Jika sudah dibayar, kurangi stok kamar sesuai quantity
-            if ($request->status === 'paid' && in_array($transaksi->tipe_bayar, ['dp', 'full'])) {
-                $kosDetail = KosDetail::find($transaksi->kamar_id);
+            if ($request->status === 'paid') {
+                $pembayaran = $transaksi->pembayaran()->whereIn('tipe_bayar', ['dp', 'full'])->first();
+                if ($pembayaran) {
+                    $kosDetail = KosDetail::find($transaksi->kamar_id);
 
-                if ($kosDetail && $kosDetail->stok >= $transaksi->quantity) {
-                    $kosDetail->stok -= $transaksi->quantity;
-                    $kosDetail->save();
-                } else {
-                    return redirect()->route('transaksi.index')
-                        ->with('error', 'Stok kamar tidak cukup untuk transaksi ini');
+                    if ($kosDetail && $kosDetail->stok >= $transaksi->quantity) {
+                        $kosDetail->stok -= $transaksi->quantity;
+                        $kosDetail->save();
+                    } else {
+                        return redirect()->route('transaksi.index')
+                            ->with('error', 'Stok kamar tidak cukup untuk transaksi ini');
+                    }
                 }
             }
 
@@ -110,7 +107,7 @@ class TransaksiController extends Controller
     }
 
     /**
-     * Tambah pembayaran baru
+     * Tambah pembayaran baru untuk transaksi
      */
     public function pembayaran(Request $request, $id)
     {
@@ -118,29 +115,21 @@ class TransaksiController extends Controller
             $request->validate([
                 'nominal'     => 'required|integer|min:0',
                 'keterangan'  => 'nullable|string|max:255',
+                'tanggal'     => 'required|date',
+                'tipe_bayar'  => 'required|in:dp,full',
+                'jenis_bayar' => 'required|in:biaya_kos,tagihan,denda',
             ]);
 
-            // Ambil transaksi lama
-            $oldTransaksi = Transaksi::findOrFail($id);
+            $transaksi = Transaksi::findOrFail($id);
 
-            // Insert transaksi baru dengan data yang sama kecuali nominal & keterangan
-            $newTransaksi = Transaksi::create([
-                'user_id'            => $oldTransaksi->user_id,
-                'no_order'           => $oldTransaksi->no_order, // tetap sama
-                'tanggal'            => now()->format('Y-m-d'),
-                'start_order_date'   => $oldTransaksi->start_order_date,
-                'end_order_date'     => $oldTransaksi->end_order_date,
-                'kos_id'             => $oldTransaksi->kos_id,
-                'kamar_id'           => $oldTransaksi->kamar_id,
-                'paket_id'           => $oldTransaksi->paket_id,
-                'harga'              => $oldTransaksi->harga,
-                'nominal'            => $request->nominal, // baru
-                'quantity'           => $oldTransaksi->quantity,
-                'keterangan'         => $request->keterangan, // baru
-                'tipe_bayar'         => $oldTransaksi->tipe_bayar,
-                'jenis_bayar'        => $oldTransaksi->jenis_bayar,
-                'methode_pembayaran' => $oldTransaksi->methode_pembayaran,
-                'status'             => 'paid', // default paid untuk pembayaran baru
+            // Create new pembayaran record
+            $pembayaran = Pembayaran::create([
+                'transaksi_id' => $transaksi->id,
+                'tanggal'      => $request->tanggal,
+                'jenis_bayar'  => $request->jenis_bayar,
+                'tipe_bayar'   => $request->tipe_bayar,
+                'keterangan'   => $request->keterangan,
+                'nominal'      => $request->nominal,
             ]);
 
             return redirect()->route('transaksi.index')
@@ -158,7 +147,7 @@ class TransaksiController extends Controller
     {
         try {
             $transaksi = Transaksi::findOrFail($id);
-            $transaksi->delete();
+            $transaksi->delete(); // Pembayaran records will be deleted via ON DELETE CASCADE
 
             return redirect()->route('transaksi.index')
                 ->with('success', 'Transaksi berhasil dihapus');
@@ -166,5 +155,21 @@ class TransaksiController extends Controller
             return redirect()->route('transaksi.index')
                 ->with('error', 'Gagal menghapus transaksi: ' . $e->getMessage());
         }
+    }
+
+    public function invoice($id)
+    {
+        $trx = Transaksi::with(['user', 'kos', 'kamar', 'pembayaran'])->findOrFail($id);
+
+        // Define $total as $trx->harga (or adjust based on your logic)
+        $total = $trx->harga;
+
+        // Clean filename for the PDF
+        $safeFileName = 'Invoice-' . Str::slug($trx->no_order, '-');
+
+        $pdf = Pdf::loadView('invoices.kos_invoice', compact('trx', 'total'))
+                 ->setPaper('A4', 'portrait');
+
+        return $pdf->stream($safeFileName . '.pdf');
     }
 }

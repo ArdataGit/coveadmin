@@ -98,4 +98,21 @@ class tipeKosController extends Controller
 
         return redirect()->route('tipeKos.index')->with('success', 'Room type deleted successfully');
     }
+
+    
+    public function getAll()
+    {
+        $tipekos = TipeKos::orderBy('created_at', 'desc')->get()->map(function ($item) {
+            return [
+                'id'         => $item->id,
+                'nama'       => $item->nama,
+                'created_at' => $item->created_at->format('d M Y H:i'),
+            ];
+        });
+
+        return response()->json([
+            'success' => true,
+            'data'    => $tipekos
+        ]);
+    }
 }
