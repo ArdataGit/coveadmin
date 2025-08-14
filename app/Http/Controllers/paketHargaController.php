@@ -7,6 +7,7 @@ use App\Models\PaketHarga;
 use App\Models\Kos;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\Validator;
 
 class paketHargaController extends Controller
 {
@@ -33,54 +34,104 @@ class paketHargaController extends Controller
     }
 
     /**
-     * Store a newly created resource in storage.
+     * Store a newly created paket harga in storage.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\JsonResponse
      */
-    public function store(Request $request): JsonResponse
+    public function store(Request $request)
     {
-        $validated = $request->validate([
+        $validator = Validator::make($request->all(), [
             'kos_id' => 'required|exists:kos,id',
-            'kamar_id' => 'required|exists:kos_detail,id',
-            'perharian_harga' => 'nullable|integer|min:0',
-            'perbulan_harga' => 'nullable|integer|min:0',
-            'pertigabulan_harga' => 'nullable|integer|min:0',
-            'perenambulan_harga' => 'nullable|integer|min:0',
-            'pertahun_harga' => 'nullable|integer|min:0',
-            'ketersediaan' => 'nullable|json', // validasi JSON string (optional)
-        ]);
-
-        // Jika ketersediaan dikirim sebagai array, encode ke json
-        if (isset($validated['ketersediaan']) && is_array($validated['ketersediaan'])) {
-            $validated['ketersediaan'] = json_encode($validated['ketersediaan']);
-        }
-
-        PaketHarga::create($validated);
-
-        return response()->json(['success' => true, 'message' => 'Paket Harga berhasil ditambahkan']);
-    }
-
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, PaketHarga $paketHarga): JsonResponse
-    {
-        $validated = $request->validate([
-            'kos_id' => 'required|exists:kos,id',
-            'kamar_id' => 'required|exists:kos_detail,id',
-            'perharian_harga' => 'nullable|integer|min:0',
-            'perbulan_harga' => 'nullable|integer|min:0',
-            'pertigabulan_harga' => 'nullable|integer|min:0',
-            'perenambulan_harga' => 'nullable|integer|min:0',
-            'pertahun_harga' => 'nullable|integer|min:0',
+            'kamar_id' => [
+                'required',
+                'exists:kos_detail,id',
+                function ($attribute, $value, $fail) use ($request) {
+                    $kamar = KosDetail::find($value);
+                    if ($kamar && $kamar->kos_id != $request->kos_id) {
+                        $fail('Kamar tidak terkait dengan kos yang dipilih.');
+                    }
+                },
+            ],
+            'nama' => 'required|string|max:255',
+            'perharian_harga' => 'nullable|numeric|min:0',
+            'perbulan_harga' => 'nullable|numeric|min:0',
+            'pertigabulan_harga' => 'nullable|numeric|min:0',
+            'perenambulan_harga' => 'nullable|numeric|min:0',
+            'pertahun_harga' => 'nullable|numeric|min:0',
             'ketersediaan' => 'nullable|json',
         ]);
 
-        if (isset($validated['ketersediaan']) && is_array($validated['ketersediaan'])) {
-            $validated['ketersediaan'] = json_encode($validated['ketersediaan']);
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => $validator->errors()->first(),
+            ], 422);
         }
 
-        $paketHarga->update($validated);
+        $data = $request->all();
+        if (isset($data['ketersediaan']) && is_array($data['ketersediaan'])) {
+            $data['ketersediaan'] = json_encode($data['ketersediaan']);
+        }
 
-        return response()->json(['success' => true, 'message' => 'Paket Harga berhasil diupdate']);
+        $paketHarga = PaketHarga::create($data);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Paket Harga berhasil ditambahkan',
+            'data' => $paketHarga
+        ]);
+    }
+
+    /**
+     * Update the specified paket harga in storage.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @param  \App\Models\PaketHarga  $paketHarga
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function update(Request $request, PaketHarga $paketHarga)
+    {
+        $validator = Validator::make($request->all(), [
+            'kos_id' => 'required|exists:kos,id',
+            'kamar_id' => [
+                'required',
+                'exists:kos_detail,id',
+                function ($attribute, $value, $fail) use ($request) {
+                    $kamar = KosDetail::find($value);
+                    if ($kamar && $kamar->kos_id != $request->kos_id) {
+                        $fail('Kamar tidak terkait dengan kos yang dipilih.');
+                    }
+                },
+            ],
+            'nama' => 'required|string|max:255',
+            'perharian_harga' => 'nullable|numeric|min:0',
+            'perbulan_harga' => 'nullable|numeric|min:0',
+            'pertigabulan_harga' => 'nullable|numeric|min:0',
+            'perenambulan_harga' => 'nullable|numeric|min:0',
+            'pertahun_harga' => 'nullable|numeric|min:0',
+            'ketersediaan' => 'nullable|json',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => $validator->errors()->first(),
+            ], 422);
+        }
+
+        $data = $request->all();
+        if (isset($data['ketersediaan']) && is_array($data['ketersediaan'])) {
+            $data['ketersediaan'] = json_encode($data['ketersediaan']);
+        }
+
+        $paketHarga->update($data);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Paket Harga berhasil diupdate',
+            'data' => $paketHarga
+        ]);
     }
 
     /**

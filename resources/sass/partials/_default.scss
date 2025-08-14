@@ -2,7 +2,7 @@
 Default CSS
 -------------------------------*/
 
-@import url('https://fonts.googleapis.com/css2?family=Hind:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+@import url("https://fonts.googleapis.com/css2?family=Hind:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700;800;900&display=swap");
 * {
     margin: 0;
     padding: 0;
@@ -55,7 +55,7 @@ a:hover {
 }
 
 input:focus-visible {
-    outline: none
+    outline: none;
 }
 
 h1,
@@ -90,10 +90,10 @@ ul {
     padding: 0px;
 }
 
-li {
-    list-style: none;
-    display: inline-block;
-}
+// li {
+//     list-style: none;
+//     display: inline-block;
+// }
 
 // .main_wrapper overflow-hidden {
 //     overflow: hidden;
@@ -106,14 +106,14 @@ li {
 .container-sm,
 .container-xl,
 .container-xxl {
-    padding-right: var(--bs-gutter-x, .9375rem);
-    padding-left: var(--bs-gutter-x, .9375rem);
-    --bs-gutter-x: .9375rem;
+    padding-right: var(--bs-gutter-x, 0.9375rem);
+    padding-left: var(--bs-gutter-x, 0.9375rem);
+    --bs-gutter-x: 0.9375rem;
 }
 
 .container-fluid.full__width__padding {
     padding: 0 30px;
-    @media #{$device-xxl}{
+    @media #{$device-xxl} {
         padding: 0 150px;
     }
     @media #{$device-xl} {
@@ -272,17 +272,17 @@ li {
     text-align: center;
     overflow: hidden;
     border-radius: 50px;
-    z-index: 9811!important;
+    z-index: 9811 !important;
     position: fixed;
     display: block;
-    box-shadow: 0px 10px 50px rgba(13, 38, 59, .15);
+    box-shadow: 0px 10px 50px rgba(13, 38, 59, 0.15);
 }
 
 #scrollUp i {
     display: block;
     line-height: 50px;
     font-size: 20px;
-    transition: .5s;
+    transition: 0.5s;
 }
 
 #scrollUp:hover i {
@@ -307,9 +307,9 @@ li {
     font-weight: 600;
     font-size: 14px;
     line-height: 1.5;
-    color:var(--primaryColor);
+    color: var(--primaryColor);
     border-radius: var(--borderRadius2);
-    background:var(--whitegrey3);
+    background: var(--whitegrey3);
     display: inline-block;
     text-align: center;
     margin-bottom: 20px;
@@ -331,16 +331,16 @@ li {
         border: 1px solid var(--primaryColor);
     }
 
-    &.default__button--2{
+    &.default__button--2 {
         background-color: var(--secondaryColor);
         border: 1px solid var(--secondaryColor);
         &:hover {
             background-color: var(--whiteColor);
             color: var(--secondaryColor);
             border: 1px solid var(--secondaryColor);
-        }  
+        }
     }
-    &.default__button--3{
+    &.default__button--3 {
         background-color: transparent;
         border: 1px solid var(--primaryColor);
         color: var(--primaryColor);
@@ -348,9 +348,9 @@ li {
             color: var(--whiteColor);
             border: 1px solid var(--primaryColor);
             background-color: var(--primaryColor);
-        }  
+        }
     }
-    &.default__button--4{
+    &.default__button--4 {
         background-color: transparent;
         border: 1px solid var(--secondaryColor);
         color: var(--secondaryColor);
@@ -358,11 +358,9 @@ li {
             color: var(--whiteColor);
             border: 1px solid var(--secondaryColor);
             background-color: var(--secondaryColor);
-        }  
+        }
     }
 }
-
-
 
 @keyframes dot-anim {
     0% {
@@ -438,8 +436,12 @@ li {
     width: 500px;
     height: 500px;
     border-radius: 1000px;
-    background-image: linear-gradient(45deg, var(--secondaryColor), var(--primaryColor));
-    opacity: 0.10;
+    background-image: linear-gradient(
+        45deg,
+        var(--secondaryColor),
+        var(--primaryColor)
+    );
+    opacity: 0.1;
     -webkit-filter: blur(100px);
     filter: blur(100px);
 }
@@ -449,8 +451,12 @@ li {
     top: 100px;
     right: -250px;
     bottom: auto;
-    opacity: 0.10;
-    background-image: linear-gradient(45deg, var(--primaryColor), var(--secondaryColor));
+    opacity: 0.1;
+    background-image: linear-gradient(
+        45deg,
+        var(--primaryColor),
+        var(--secondaryColor)
+    );
 }
 
 .section__title {
@@ -630,7 +636,7 @@ li {
     right: -50px;
     top: 100px;
     z-index: 9999999;
-    transition: .3s;
+    transition: 0.3s;
 }
 
 .mode_switcher.my_switcher:hover {
@@ -678,15 +684,6 @@ li {
     display: none;
 }
 
-
-
-
-
-
-
-
-
-
 /*****************************************************
     37. Preloader CSS Here 
 ****************************/
@@ -711,14 +708,14 @@ li {
     left: 0;
     right: 0;
     bottom: 0;
-  }
-  .back__loader_logo {
+}
+.back__loader_logo {
     position: absolute;
-  }
-  .back__loader_logo img {
+}
+.back__loader_logo img {
     width: 40px;
-  }
-  #back__circle_loader {
+}
+#back__circle_loader {
     width: 100px;
     height: 100px;
     border-style: solid;
@@ -730,30 +727,29 @@ li {
     border-radius: 50%;
     -webkit-animation: spinLoader 2s linear infinite;
     animation: spinLoader 2s linear infinite;
-  }
-  @-webkit-keyframes spinLoader {
+}
+@-webkit-keyframes spinLoader {
     0% {
-      -webkit-transform: rotate(0deg);
-      transform: rotate(0deg);
+        -webkit-transform: rotate(0deg);
+        transform: rotate(0deg);
     }
     100% {
-      -webkit-transform: rotate(360deg);
-      transform: rotate(360deg);
+        -webkit-transform: rotate(360deg);
+        transform: rotate(360deg);
     }
-  }
-  @keyframes spinLoader {
+}
+@keyframes spinLoader {
     0% {
-      -webkit-transform: rotate(0deg);
-      transform: rotate(0deg);
+        -webkit-transform: rotate(0deg);
+        transform: rotate(0deg);
     }
     100% {
-      -webkit-transform: rotate(360deg);
-      transform: rotate(360deg);
+        -webkit-transform: rotate(360deg);
+        transform: rotate(360deg);
     }
-  }
+}
 
-
-  .modal__wraper{
+.modal__wraper {
     max-width: 1000px;
     margin: 150px auto;
     max-height: 750px;

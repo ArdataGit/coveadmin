@@ -12,14 +12,34 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use PDF;
 
-class TransaksiController extends Controller
+class transaksiController extends Controller
 {
     /**
-     * Menampilkan semua transaksi
+     * Menampilkan semua transaksi dengan search dan filter
      */
-    public function index()
+    public function index(Request $request)
     {
-        $transaksis = Transaksi::with(['user', 'kos', 'kamar', 'pembayaran'])->latest()->get();
+        $query = Transaksi::with(['user', 'kos', 'kamar', 'pembayaran']);
+
+        // Search
+        if ($search = $request->input('search')) {
+            $query->where(function ($q) use ($search) {
+                $q->where('no_order', 'like', "%{$search}%")
+                  ->orWhereHas('user', function ($q) use ($search) {
+                      $q->where('nama', 'like', "%{$search}%");
+                  })
+                  ->orWhereHas('kos', function ($q) use ($search) {
+                      $q->where('nama', 'like', "%{$search}%");
+                  });
+            });
+        }
+
+        // Filter status
+        if ($status = $request->input('status')) {
+            $query->where('status', $status);
+        }
+
+        $transaksis = $query->latest()->get();
         $users = User::all();
         $kos = Kos::all();
         $kamars = KosDetail::all();
@@ -41,6 +61,9 @@ class TransaksiController extends Controller
     {
         $request->validate([
             'user_id'           => 'required|exists:users,id',
+            'kos_id'            => 'required|exists:kos,id',
+            'kamar_id'          => 'required|exists:kos_detail,id',
+            'paket_id'          => 'required|exists:paket_harga,id',
             'tanggal'           => 'required|date',
             'harga'             => 'required|integer|min:0',
             'quantity'          => 'nullable|integer|min:1',
@@ -62,10 +85,8 @@ class TransaksiController extends Controller
             'status'             => 'pending',
         ]);
 
-        return response()->json([
-            'message' => 'Transaksi berhasil dibuat',
-            'data'    => $transaksi,
-        ], 201);
+        return redirect()->route('transaksi.index')
+            ->with('success', 'Transaksi berhasil dibuat');
     }
 
     /**
@@ -130,6 +151,7 @@ class TransaksiController extends Controller
                 'tipe_bayar'   => $request->tipe_bayar,
                 'keterangan'   => $request->keterangan,
                 'nominal'      => $request->nominal,
+                'status'       => 'belum_lunas',
             ]);
 
             return redirect()->route('transaksi.index')
@@ -167,9 +189,71 @@ class TransaksiController extends Controller
         // Clean filename for the PDF
         $safeFileName = 'Invoice-' . Str::slug($trx->no_order, '-');
 
-        $pdf = Pdf::loadView('invoices.kos_invoice', compact('trx', 'total'))
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('invoices.kos_invoice', compact('trx', 'total'))
                  ->setPaper('A4', 'portrait');
 
         return $pdf->stream($safeFileName . '.pdf');
+    }
+
+    public function getByUser(Request $request, $userId)
+    {
+
+        // dd($userId);
+        try {
+            // Validasi user_id
+            if (!is_numeric($userId) || $userId <= 0) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Invalid user ID'
+                ], 400);
+            }
+
+            // Cek apakah user ada
+            $user = User::find($userId);
+            if (!$user) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'User not found'
+                ], 404);
+            }
+
+            // Query transaksi berdasarkan user_id dengan relasi
+            $query = Transaksi::with(['pembayaran', 'kos', 'kamar'])
+                ->where('user_id', $userId);
+
+            // Search (opsional, jika ada parameter search)
+            if ($search = $request->input('search')) {
+                $query->where(function ($q) use ($search) {
+                    $q->where('no_order', 'like', "%{$search}%")
+                    ->orWhereHas('kos', function ($q) use ($search) {
+                        $q->where('nama', 'like', "%{$search}%");
+                    })
+                    ->orWhereHas('kamar', function ($q) use ($search) {
+                        $q->where('nama', 'like', "%{$search}%");
+                    });
+                });
+            }
+
+            // Filter status (opsional)
+            if ($status = $request->input('status')) {
+                $query->where('status', $status);
+            }
+
+            // Urutkan dari yang terbaru
+            $transaksis = $query->latest()->get();
+
+            // Format response
+            return response()->json([
+                'success' => true,
+                'message' => 'Transaksi retrieved successfully',
+                'data' => $transaksis
+            ], 200);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to retrieve transaksi: ' . $e->getMessage()
+            ], 500);
+        }
     }
 }

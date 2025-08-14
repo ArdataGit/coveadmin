@@ -9,6 +9,7 @@ use App\Models\TipeKos;
 use App\Models\Lantai;
 use App\Models\Fasilitas;
 use App\Models\GalleryKos;
+use App\Models\PaketHarga;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -130,7 +131,6 @@ class KosController extends Controller
     {
         $kos = Kos::findOrFail($kos_id);
         $kosDetails = KosDetail::where('kos_id', $kos_id)->get();
-        // dd( $kos);
         $tipeKos = TipeKos::all();
         $lantai = Lantai::all();
         $fasilitas = Fasilitas::all();
@@ -243,15 +243,9 @@ class KosController extends Controller
         ]);
     }
 
-
     /**
-     * Fetch gallery data for the table via AJAX.
-     *//**
      * Display the gallery view for a specific kamar.
      */
-/**
- * Display the gallery view for a specific kamar.
- */
     public function gallery($kos_id, $kamar_id)
     {
         $kos = Kos::findOrFail($kos_id);
@@ -274,7 +268,7 @@ class KosController extends Controller
     public function galleryStore(Request $request, $kos_id, $kamar_id)
     {
         $validator = Validator::make($request->all(), [
-            'image' => 'required|image|mimes:jpeg,png,jpg,gif|max:2048', // Max 2MB
+            'image' => 'required|image|mimes:jpeg,png,jpg,gif|max:2048',
         ]);
 
         if ($validator->fails()) {
@@ -286,7 +280,6 @@ class KosController extends Controller
 
         $image = $request->file('image');
         $nama_file = time() . '_' . $image->getClientOriginalName();
-        // Store the image directly in public/gallery/
         $image->move(public_path('gallery'), $nama_file);
         $url = '/gallery/' . $nama_file;
 
@@ -309,7 +302,6 @@ class KosController extends Controller
     public function galleryDestroy($kos_id, $kamar_id, $id)
     {
         $gallery = GalleryKos::where('kamar_id', $kamar_id)->findOrFail($id);
-        // Delete the image from public/gallery/
         unlink(public_path('gallery/' . $gallery->nama_file));
         $gallery->delete();
 
@@ -322,181 +314,200 @@ class KosController extends Controller
     /**
      * Get all kos data with advanced search
      */
-public function getAllData(Request $request)
-{
-    $search      = $request->query('search');
-    $tipe        = $request->query('tipe');
-    $daerah      = $request->query('daerah');
-    $jenis       = $request->query('jenis');
-    $nama_kamar  = $request->query('nama_kamar');
-    $nama_kos    = $request->query('nama_kos');
-    $start_date  = $request->query('start_date');
-    $end_date    = $request->query('end_date');
-    $perPage     = $request->query('per_page', 10);
+    public function getAllData(Request $request)
+    {
+        $search      = $request->query('search');
+        $tipe        = $request->query('tipe');
+        $daerah      = $request->query('daerah');
+        $jenis       = $request->query('jenis');
+        $nama_kamar  = $request->query('nama_kamar');
+        $nama_kos    = $request->query('nama_kos');
+        $start_date  = $request->query('start_date');
+        $end_date    = $request->query('end_date');
+        $perPage     = $request->query('per_page', 10);
 
-    \Log::info('=== getAllData Request Params ===', [
-        'search'     => $search,
-        'tipe'       => $tipe,
-        'daerah'     => $daerah,
-        'jenis'      => $jenis,
-        'nama_kamar' => $nama_kamar,
-        'nama_kos'   => $nama_kos,
-        'start_date' => $start_date,
-        'end_date'   => $end_date,
-        'per_page'   => $perPage
-    ]);
+        \Log::info('=== getAllData Request Params ===', [
+            'search'     => $search,
+            'tipe'       => $tipe,
+            'daerah'     => $daerah,
+            'jenis'      => $jenis,
+            'nama_kamar' => $nama_kamar,
+            'nama_kos'   => $nama_kos,
+            'start_date' => $start_date,
+            'end_date'   => $end_date,
+            'per_page'   => $perPage
+        ]);
 
-    $query = KosDetail::with(['kos.daerah', 'tipeKos', 'lantai', 'paketHarga'])
-        ->orderBy('id', 'desc');
+        $query = KosDetail::with(['kos.daerah', 'tipeKos', 'lantai', 'paketHarga'])
+            ->orderBy('id', 'desc');
 
-    // ====== FILTER UMUM ======
-    if ($search) {
-        $query->where(function ($q) use ($search) {
-            $q->where('nama', 'like', "%{$search}%")
-              ->orWhere('jenis_kos', 'like', "%{$search}%")
-              ->orWhereHas('kos', function ($q2) use ($search) {
-                  $q2->where('nama', 'like', "%{$search}%")
-                      ->orWhere('alamat_kota', 'like', "%{$search}%")
-                      ->orWhereHas('daerah', function ($q3) use ($search) {
-                          $q3->where('nama', 'like', "%{$search}%");
-                      });
-              })
-              ->orWhereHas('tipeKos', function ($q4) use ($search) {
-                  $q4->where('nama', 'like', "%{$search}%");
-              });
-        });
-    }
-
-    if ($tipe)   $query->whereHas('tipeKos', fn($q) => $q->where('nama', 'like', "%{$tipe}%"));
-    if ($daerah) $query->whereHas('kos.daerah', fn($q) => $q->where('nama', 'like', "%{$daerah}%"));
-    if ($jenis)  $query->where('jenis_kos', 'like', "%{$jenis}%");
-    if ($nama_kamar) $query->where('nama', 'like', "%{$nama_kamar}%");
-    if ($nama_kos)   $query->whereHas('kos', fn($q) => $q->where('nama', 'like', "%{$nama_kos}%"));
-
-    // ====== FILTER TANGGAL ======
-    if ($start_date && $end_date) {
-        try {
-            $startDate = Carbon::parse($start_date)->toDateString();
-            $endDate   = Carbon::parse($end_date)->toDateString();
-
-            \Log::info('Tanggal filter ter-parse', [
-                'startDate' => $startDate,
-                'endDate'   => $endDate
-            ]);
-
-            $query->whereHas('paketHarga', function ($q) use ($startDate, $endDate) {
-                $q->whereNotNull('ketersediaan')
-                  ->whereRaw('EXISTS (
-                      SELECT 1
-                      FROM JSON_TABLE(
-                          ketersediaan,
-                          "$[*]" COLUMNS (
-                              start_date DATE PATH "$.start_date",
-                              end_date DATE PATH "$.end_date"
-                          )
-                      ) AS availability
-                      WHERE availability.start_date <= ? 
-                        AND availability.end_date >= ?
-                  )', [$endDate, $startDate]);
+        if ($search) {
+            $query->where(function ($q) use ($search) {
+                $q->where('nama', 'like', "%{$search}%")
+                  ->orWhere('jenis_kos', 'like', "%{$search}%")
+                  ->orWhereHas('kos', function ($q2) use ($search) {
+                      $q2->where('nama', 'like', "%{$search}%")
+                          ->orWhere('alamat_kota', 'like', "%{$search}%")
+                          ->orWhereHas('daerah', function ($q3) use ($search) {
+                              $q3->where('nama', 'like', "%{$search}%");
+                          });
+                  })
+                  ->orWhereHas('tipeKos', function ($q4) use ($search) {
+                      $q4->where('nama', 'like', "%{$search}%");
+                  });
             });
-
-        } catch (\Exception $e) {
-            \Log::error('Error parsing tanggal', ['error' => $e->getMessage()]);
-            return response()->json([
-                'success' => false,
-                'message' => 'Invalid start_date or end_date format',
-            ], 400);
         }
-    }
 
-    // ====== AMBIL DATA ======
-    $result = $query->paginate($perPage);
-    \Log::info('Jumlah data setelah filter availability (query SQL)', ['count' => $result->total()]);
+        if ($tipe)   $query->whereHas('tipeKos', fn($q) => $q->where('nama', 'like', "%{$tipe}%"));
+        if ($daerah) $query->whereHas('kos.daerah', fn($q) => $q->where('nama', 'like', "%{$daerah}%"));
+        if ($jenis)  $query->where('jenis_kos', 'like', "%{$jenis}%");
+        if ($nama_kamar) $query->where('nama', 'like', "%{$nama_kamar}%");
+        if ($nama_kos)   $query->whereHas('kos', fn($q) => $q->where('nama', 'like', "%{$nama_kos}%"));
 
-    // ====== Fallback filter di PHP untuk validasi (debug) ======
-    if ($start_date && $end_date) {
-        $result->setCollection(
-            $result->getCollection()->filter(function ($item) use ($start_date, $end_date) {
-                $availabilityJson = optional($item->paketHarga)->ketersediaan;
-                \Log::info("Periksa ketersediaan untuk ID {$item->id}", [
-                    'ketersediaan' => $availabilityJson
+        if ($start_date && $end_date) {
+            try {
+                $startDate = Carbon::parse($start_date)->toDateString();
+                $endDate   = Carbon::parse($end_date)->toDateString();
+
+                \Log::info('Tanggal filter ter-parse', [
+                    'startDate' => $startDate,
+                    'endDate'   => $endDate
                 ]);
 
-                if (!$availabilityJson) {
-                    \Log::info('❌ Tidak ada ketersediaan');
-                    return false;
-                }
+                $query->whereHas('paketHarga', function ($q) use ($startDate, $endDate) {
+                    $q->whereNotNull('ketersediaan')
+                      ->whereRaw('EXISTS (
+                          SELECT 1
+                          FROM JSON_TABLE(
+                              ketersediaan,
+                              "$[*]" COLUMNS (
+                                  start_date DATE PATH "$.start_date",
+                                  end_date DATE PATH "$.end_date"
+                              )
+                          ) AS availability
+                          WHERE availability.start_date <= ? 
+                            AND availability.end_date >= ?
+                      )', [$endDate, $startDate]);
+                });
 
-                $availabilityArr = json_decode($availabilityJson, true);
-                if (!is_array($availabilityArr)) {
-                    \Log::info('❌ Format ketersediaan tidak valid JSON array');
-                    return false;
-                }
+            } catch (\Exception $e) {
+                \Log::error('Error parsing tanggal', ['error' => $e->getMessage()]);
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Invalid start_date or end_date format',
+                ], 400);
+            }
+        }
 
-                foreach ($availabilityArr as $periode) {
-                    \Log::info('Cek periode', $periode);
-                    if (
-                        isset($periode['start_date'], $periode['end_date']) &&
-                        $periode['start_date'] <= $end_date &&
-                        $periode['end_date'] >= $start_date
-                    ) {
-                        \Log::info('✅ MATCH periode', $periode);
-                        return true;
+        $result = $query->paginate($perPage);
+        \Log::info('Jumlah data setelah filter availability (query SQL)', ['count' => $result->total()]);
+
+        if ($start_date && $end_date) {
+            $result->setCollection(
+                $result->getCollection()->filter(function ($item) use ($start_date, $end_date) {
+                    $availabilityJson = optional($item->paketHarga)->ketersediaan;
+                    \Log::info("Periksa ketersediaan untuk ID {$item->id}", [
+                        'ketersediaan' => $availabilityJson
+                    ]);
+
+                    if (!$availabilityJson) {
+                        \Log::info('❌ Tidak ada ketersediaan');
+                        return false;
                     }
-                }
 
-                \Log::info('❌ Tidak ada periode cocok');
-                return false;
+                    $availabilityArr = json_decode($availabilityJson, true);
+                    if (!is_array($availabilityArr)) {
+                        \Log::info('❌ Format ketersediaan tidak valid JSON array');
+                        return false;
+                    }
+
+                    foreach ($availabilityArr as $periode) {
+                        \Log::info('Cek periode', $periode);
+                        if (
+                            isset($periode['start_date'], $periode['end_date']) &&
+                            $periode['start_date'] <= $end_date &&
+                            $periode['end_date'] >= $start_date
+                        ) {
+                            \Log::info('✅ MATCH periode', $periode);
+                            return true;
+                        }
+                    }
+
+                    \Log::info('❌ Tidak ada periode cocok');
+                    return false;
+                })
+            );
+        }
+
+        $result->setCollection(
+            $result->getCollection()->map(function ($item) {
+                $paketHarga = $item->paketHarga ? [
+                    'perharian_harga' => $item->paketHarga->perharian_harga ?? null,
+                    'perbulan_harga' => $item->paketHarga->perbulan_harga ?? null,
+                    'pertigabulan_harga' => $item->paketHarga->pertigabulan_harga ?? null,
+                    'perenambulan_harga' => $item->paketHarga->perenambulan_harga ?? null,
+                    'pertahun_harga' => $item->paketHarga->pertahun_harga ?? null,
+                    'ketersediaan' => $item->paketHarga->ketersediaan ?? [],
+                ] : null;
+
+                return [
+                    'id'          => $item->id,
+                    'nama_kamar'  => $item->nama,
+                    'jenis_kos'   => $item->jenis_kos,
+                    'nama_kos'    => $item->kos->nama ?? null,
+                    'lokasi_kos'  => $item->kos->daerah->nama ?? null,
+                    'tipe_kos'    => $item->tipeKos->nama ?? null,
+                    'lantai'      => $item->lantai->nama ?? null,
+                    'fasilitas'   => $item->fasilitas_ids ?? [],
+                    'created_at'  => $item->created_at->format('d M Y H:i'),
+                    'paket_harga' => $paketHarga,
+                ];
             })
         );
+
+        \Log::info('Jumlah data final setelah semua filter', ['count' => $result->count()]);
+
+        return response()->json([
+            'success' => true,
+            'data'    => $result->items(),
+            'meta'    => [
+                'current_page' => $result->currentPage(),
+                'last_page'    => $result->lastPage(),
+                'per_page'     => $result->perPage(),
+                'total'        => $result->total(),
+                'from'         => $result->firstItem(),
+                'to'           => $result->lastItem(),
+            ]
+        ]);
     }
 
-    \Log::info('Jumlah data final setelah semua filter', ['count' => $result->count()]);
+   /**
+     * Fetch KosDetail by kos_id for dropdown
+     */
+    public function getKosDetails($kos_id)
+    {
+        $kosDetails = KosDetail::where('kos_id', $kos_id)
+            ->select('id', 'nama')
+            ->get();
 
-    // ====== MAPPING DATA ======
-    $result->setCollection(
-        $result->getCollection()->map(function ($item) {
-            $paketHarga = $item->paketHarga ? [
-                'perharian_harga' => $item->paketHarga->perharian_harga ?? null,
-                'perbulan_harga' => $item->paketHarga->perbulan_harga ?? null,
-                'pertigabulan_harga' => $item->paketHarga->pertigabulan_harga ?? null,
-                'perenambulan_harga' => $item->paketHarga->perenambulan_harga ?? null,
-                'pertahun_harga' => $item->paketHarga->pertahun_harga ?? null,
-                'ketersediaan' => $item->paketHarga->ketersediaan ?? [],
-            ] : null;
+        return response()->json([
+            'success' => true,
+            'data' => $kosDetails
+        ]);
+    }
 
-            return [
-                'id'          => $item->id,
-                'nama_kamar'  => $item->nama,
-                'jenis_kos'   => $item->jenis_kos,
-                'nama_kos'    => $item->kos->nama ?? null,
-                'lokasi_kos'  => $item->kos->daerah->nama ?? null,
-                'tipe_kos'    => $item->tipeKos->nama ?? null,
-                'lantai'      => $item->lantai->nama ?? null,
-                'fasilitas'   => $item->fasilitas_ids ?? [],
-                'created_at'  => $item->created_at->format('d M Y H:i'),
-                'paket_harga' => $paketHarga,
-            ];
-        })
-    );
+    /**
+     * Fetch PaketHarga by kamar_id for dropdown
+     */
+    public function getPaketHarga($kamar_id)
+    {
+        $paketHarga = PaketHarga::where('kamar_id', $kamar_id)
+            ->select('id', 'nama', 'perharian_harga', 'perbulan_harga', 'pertigabulan_harga', 'perenambulan_harga', 'pertahun_harga')
+            ->get();
 
-    \Log::info('Jumlah data final setelah semua filter', ['count' => $result->count()]);
-
-    return response()->json([
-        'success' => true,
-        'data'    => $result->items(),
-        'meta'    => [
-            'current_page' => $result->currentPage(),
-            'last_page'    => $result->lastPage(),
-            'per_page'     => $result->perPage(),
-            'total'        => $result->total(),
-            'from'         => $result->firstItem(),
-            'to'           => $result->lastItem(),
-        ]
-    ]);
-}
-
-
-
-
+        return response()->json([
+            'success' => true,
+            'data' => $paketHarga
+        ]);
+    }
 }

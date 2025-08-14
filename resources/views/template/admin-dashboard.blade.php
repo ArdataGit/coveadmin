@@ -79,6 +79,7 @@
             margin-bottom: 10px;
         }
         .dashboard__nav ul li a {
+            list-style: none !important ;
             padding: 12px 15px;
             border-radius: 6px;
             transition: background-color 0.3s;
@@ -94,12 +95,15 @@
         }
         .dashboard__nav ul li.active > a {
             background-color: #007bff;
+            list-style: none !important ;
             color: #fff;
         }
         .dashboard__nav ul li .dropdown {
+            list-style: none !important ;
             padding-left: 30px;
         }
         .dashboard__nav ul li .dropdown li a {
+            list-style: none !important ;
             padding: 8px 15px;
             font-size: 0.95rem;
         }
@@ -221,8 +225,8 @@
                                 </div>
                                 <div class="dashboard__nav">
                                     <ul>
-                                        <li>
-                                            <a class="{{ Route::is('admin.dashboard') ? 'active' : '' }}" href="{{ url('dashboard/admin-dashboard') }}">
+                                        <li style="list-style: none;">
+                                            <a class="{{ Route::is('admin.dashboard') ? 'active' : '' }} no-dot" href="{{ url('dashboard/admin-dashboard') }}">
                                                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-home">
                                                     <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
                                                     <polyline points="9 22 9 12 15 12 15 22"></polyline>
@@ -230,7 +234,7 @@
                                                 Dashboard
                                             </a>
                                         </li>
-                                        <li class="menu-item-has-children">
+                                        <li class="menu-item-has-children" style="list-style: none;">
                                             <a href="#">
                                                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-database">
                                                     <ellipse cx="12" cy="5" rx="9" ry="3"></ellipse>
@@ -246,7 +250,7 @@
                                                 <li><a href="{{ url('dashboard/master-tipe-kos') }}">Tipe Kamar</a></li>
                                             </ul>
                                         </li>
-                                        <li>
+                                        <li style="list-style: none;">
                                             <a href="{{ url('/dashboard/master-kos') }}">
                                                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-home">
                                                     <path d="M3 12l9-9 9 9v9a2 2 0 0 1-2 2h-4v-6H9v6H5a2 2 0 0 1-2-2z"></path>
@@ -254,7 +258,7 @@
                                                 <span>Kos</span>
                                             </a>
                                         </li>
-                                        <li>
+                                        <li style="list-style: none;">
                                             <a href="{{ url('/dashboard/master-paket-harga') }}">
                                                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-dollar-sign">
                                                     <path d="M12 1v22"></path>
@@ -263,7 +267,7 @@
                                                 <span>Paket Harga</span>
                                             </a>
                                         </li>
-                                        <li>
+                                        <li style="list-style: none;">
                                             <a href="{{ url('/dashboard/settings') }}">
                                                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-globe">
                                                     <circle cx="12" cy="12" r="10"></circle>
@@ -273,7 +277,7 @@
                                                 <span>Website Settings</span>
                                             </a>
                                         </li>
-                                        <li>
+                                        <li style="list-style: none;">
                                             <a href="{{ url('/dashboard/master-user') }}">
                                                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-users">
                                                     <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
@@ -284,7 +288,7 @@
                                                 Menu User
                                             </a>
                                         </li>
-                                        <li>
+                                        <li style="list-style: none;">
                                             <a href="{{ url('/dashboard/transaksi') }}">
                                                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" 
                                                     viewBox="0 0 24 24" fill="none" stroke="currentColor" 
@@ -296,6 +300,7 @@
                                                 Transaksi
                                             </a>
                                         </li>
+
                                     </ul>
                                 </div>
                                 <div class="dashboard__nav__title mt-40">
@@ -303,7 +308,7 @@
                                 </div>
                                 <div class="dashboard__nav">
                                     <ul>
-                                        <li>
+                                        <li style="list-style: none;">
                                             <form action="{{ route('admin.logout') }}" method="POST" style="display: inline;">
                                                 @csrf
                                                 <button type="submit" style="background:none;border:none;padding:0;cursor:pointer;">

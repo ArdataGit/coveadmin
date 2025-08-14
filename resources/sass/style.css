@@ -8848,7 +8848,7 @@ Course
 }
 
 .property__comment .property__comment__list {
-  list-style: none;
+  /* list-style: none; */
   border-top: 1px solid var(--borderColor2);
   padding-top: 35px;
   position: relative;
@@ -11843,7 +11843,7 @@ Breadcrumb Area
   box-shadow: 0 0 20px 10px rgba(95, 45, 237, 0.02);
 }
 .dashboard__nav ul {
-  list-style: none;
+  /* list-style: none; */
   padding: 0;
   margin: 0;
 }
@@ -11912,7 +11912,7 @@ Breadcrumb Area
   border: 1px solid var(--borderColor);
 }
 .dashboard__nav .menu-item-has-children .dropdown li {
-  list-style: none;
+  /* list-style: none; */
   margin: 2px 0;
 }
 .dashboard__nav .menu-item-has-children .dropdown li a {
