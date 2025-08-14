@@ -300,7 +300,19 @@
                                                 Transaksi
                                             </a>
                                         </li>
-
+                                        <li style="list-style: none;">
+                                            <a href="{{ url('/dashboard/tickets') }}">
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" 
+                                                    viewBox="0 0 24 24" fill="none" stroke="currentColor" 
+                                                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round" 
+                                                    class="feather feather-ticket">
+                                                    <path d="M3 6h18v12H3z"></path>
+                                                    <path d="M12 6v12"></path>
+                                                    <path d="M9 9h6v6H9z"></path>
+                                                </svg>
+                                                Ticket
+                                            </a>
+                                        </li>
                                     </ul>
                                 </div>
                                 <div class="dashboard__nav__title mt-40">
