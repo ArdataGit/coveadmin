@@ -13,8 +13,8 @@
     border-radius: 20px;
     padding: 5px 10px;
     margin: 2px;
-    margin-left: 1rem;
-    font-size: 0.9rem;
+    margin-left: 0.5rem;
+    font-size: 0.85rem;
 }
 .chip .remove-chip {
     color: white;
@@ -37,17 +37,53 @@
     border-radius: 5px;
     margin-bottom: 20px;
 }
-/* Style for ketersediaan list in table */
 .ketersediaan-list {
-    list-style: none;
-    padding: 0;
+    padding-left: 20px; /* jarak bullet */
     margin: 0;
+    list-style-type: disc; /* bullet list */
 }
 .ketersediaan-list li {
-    margin-bottom: 5px;
+    margin-bottom: 4px;
 }
-.ketersediaan-list li:last-child {
-    margin-bottom: 0;
+.ketersediaan-column {
+    min-width: 250px; /* lebar kolom */
+}
+/* Table column width adjustments */
+.table th, .table td {
+    vertical-align: middle;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.table th:nth-child(1), .table td:nth-child(1) { /* Nomor */
+    width: 5%;
+}
+.table th:nth-child(2), .table td:nth-child(2) { /* Nama Paket */
+    width: 12%;
+}
+.table th:nth-child(3), .table td:nth-child(3) { /* Kos */
+    width: 8%;
+}
+.table th:nth-child(4), .table td:nth-child(4) { /* Kamar */
+    width: 8%;
+}
+.table th:nth-child(5), .table td:nth-child(5) { /* Harga Harian */
+    width: 10%;
+}
+.table th:nth-child(6), .table td:nth-child(6) { /* Harga Bulanan */
+    width: 10%;
+}
+.table th:nth-child(7), .table td:nth-child(7) { /* Harga 3 Bulan */
+    width: 10%;
+}
+.table th:nth-child(8), .table td:nth-child(8) { /* Harga 6 Bulan */
+    width: 10%;
+}
+.table th:nth-child(9), .table td:nth-child(9) { /* Harga Tahunan */
+    width: 10%;
+}
+.table th:nth-child(11), .table td:nth-child(11) { /* Actions */
+    width: 7%;
 }
 </style>
 @endpush
@@ -91,7 +127,8 @@
             <table class="table">
                 <thead class="table-light">
                     <tr>
-                        <th>ID</th>
+                        <th>Nomor</th>
+                        <th>Nama Paket</th>
                         <th>Kos</th>
                         <th>Kamar</th>
                         <th>Harga Harian</th>
@@ -99,14 +136,18 @@
                         <th>Harga 3 Bulan</th>
                         <th>Harga 6 Bulan</th>
                         <th>Harga Tahunan</th>
-                        <th>Ketersediaan</th>
+                        <th style="width: 30%" class="ketersediaan-column">Ketersediaan</th>
                         <th>Actions</th>
                     </tr>
                 </thead>
                 <tbody id="paket-harga-table-body">
+                    @php
+                        \Carbon\Carbon::setLocale('id');
+                    @endphp
                     @foreach ($paketHargas as $item)
                         <tr data-id="{{ $item->id }}">
-                            <td>{{ $item->id }}</td>
+                            <td>{{ $loop->index + 1 }}</td>
+                            <td>{{ $item->nama }}</td>
                             <td>{{ $item->kos->nama ?? '-' }}</td>
                             <td>{{ $item->kamar->nama ?? '-' }}</td>
                             <td>{{ $item->perharian_harga ? number_format($item->perharian_harga, 0, ',', '.') : '-' }}</td>
@@ -121,7 +162,11 @@
                                 @if (is_array($ketersediaan) && !empty($ketersediaan))
                                     <ul class="ketersediaan-list">
                                         @foreach ($ketersediaan as $range)
-                                            <li>{{ $range['start_date'] ?? '-' }} to {{ $range['end_date'] ?? '-' }}</li>
+                                            <li class="mb-2">
+                                                <strong>{{ \Carbon\Carbon::parse($range['start_date'])->translatedFormat('j F Y') }}</strong> s/d 
+                                                <strong>{{ \Carbon\Carbon::parse($range['end_date'])->translatedFormat('j F Y') }}</strong>
+                                            </li>
+                                            <br>
                                         @endforeach
                                     </ul>
                                 @else
@@ -131,6 +176,7 @@
                             <td>
                                 <button class="btn btn-sm btn-warning edit-btn" 
                                     data-id="{{ $item->id }}" 
+                                    data-nama="{{ $item->nama }}" 
                                     data-kos_id="{{ $item->kos_id }}" 
                                     data-kamar_id="{{ $item->kamar_id }}" 
                                     data-perharian_harga="{{ $item->perharian_harga }}" 
@@ -173,6 +219,13 @@
                     @csrf
                     <input type="hidden" name="ketersediaan" id="add_ketersediaan_input">
                     <div class="modal-body">
+                        <div class="mb-3">
+                            <label for="nama" class="form-label">Nama Paket</label>
+                            <input type="text" class="form-control" id="nama" name="nama" required>
+                            @error('nama')
+                                <small class="text-danger">{{ $message }}</small>
+                            @enderror
+                        </div>
                         <div class="mb-3">
                             <label for="kos_id" class="form-label">Kos</label>
                             <select class="form-control" id="kos_id" name="kos_id" required>
@@ -241,8 +294,8 @@
                                 <div class="col-5">
                                     <input type="date" class="form-control" id="ketersediaan_end" placeholder="Tanggal Selesai">
                                 </div>
-                                <div class="col-12">
-                                    <button type="button" class="btn btn-sm btn-primary mt-3" id="add_ketersediaan">Tambah</button>
+                                <div class="col-2">
+                                    <button type="button" class="btn btn-sm btn-primary mt-3 w-100" id="add_ketersediaan">Tambah</button>
                                 </div>
                             </div>
                             <div class="chip-container" id="add_ketersediaan_chips"></div>
@@ -274,6 +327,13 @@
                     <input type="hidden" name="id" id="edit_id">
                     <input type="hidden" name="ketersediaan" id="edit_ketersediaan_input">
                     <div class="modal-body">
+                        <div class="mb-3">
+                            <label for="edit_nama" class="form-label">Nama Paket</label>
+                            <input type="text" class="form-control" id="edit_nama" name="nama" required>
+                            @error('nama')
+                                <small class="text-danger">{{ $message }}</small>
+                            @enderror
+                        </div>
                         <div class="mb-3">
                             <label for="edit_kos_id" class="form-label">Kos</label>
                             <select class="form-control" id="edit_kos_id" name="kos_id" required>
@@ -342,8 +402,8 @@
                                 <div class="col-5">
                                     <input type="date" class="form-control" id="edit_ketersediaan_end" placeholder="Tanggal Selesai">
                                 </div>
-                                <div class="col-12">
-                                    <button type="button" class="btn btn-sm btn-primary mt-2" id="edit_add_ketersediaan">Tambah</button>
+                                <div class="col-2">
+                                    <button type="button" class="btn btn-sm btn-primary mt-2 w-100" id="edit_add_ketersediaan">Tambah</button>
                                 </div>
                             </div>
                             <div class="chip-container" id="edit_ketersediaan_chips"></div>
@@ -401,14 +461,38 @@ document.addEventListener('DOMContentLoaded', function() {
     // Store table data for search filtering
     let tableData = [];
 
+    // Array of Indonesian month names
+    const monthNames = [
+        'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
+        'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
+    ];
+
+    // Function to format date to "tanggal nama_bulan tahun"
+    function formatIndonesianDate(dateStr) {
+        if (!dateStr) return '-';
+        const date = new Date(dateStr);
+        if (isNaN(date)) return '-';
+        const day = date.getDate();
+        const month = monthNames[date.getMonth()];
+        const year = date.getFullYear();
+        return `${day} ${month} ${year}`;
+    }
+
     // Function to format date range for display as a list
     function formatKetersediaan(ketersediaan) {
         if (!ketersediaan || !Array.isArray(ketersediaan) || ketersediaan.length === 0) {
             return '-';
         }
-        return `<ul class="ketersediaan-list">${ketersediaan.map(range => 
-            `<li>${range.start_date || '-'} to ${range.end_date || '-'}</li>`
-        ).join('')}</ul>`;
+        return `
+            <ul class="ketersediaan-list">
+                ${ketersediaan.map(range => `
+                    <li class="mb-1">
+                        <strong>${formatIndonesianDate(range.start_date)}</strong> s/d 
+                        <strong>${formatIndonesianDate(range.end_date)}</strong>
+                    </li><br>
+                `).join('')}
+            </ul>
+        `;
     }
 
     // Function to update ketersediaan hidden input
@@ -425,7 +509,7 @@ document.addEventListener('DOMContentLoaded', function() {
     function createKetersediaanChip(startDate, endDate, containerId, inputId) {
         if (!startDate || !endDate) return;
         const container = document.getElementById(containerId);
-        const chipText = `${startDate} to ${endDate}`;
+        const chipText = `${formatIndonesianDate(startDate)} s/d ${formatIndonesianDate(endDate)}`;
         if (container.querySelector(`[data-start="${startDate}"][data-end="${endDate}"]`)) return; // Prevent duplicates
         const chip = document.createElement('span');
         chip.className = 'chip';
@@ -512,13 +596,14 @@ document.addEventListener('DOMContentLoaded', function() {
         if (emptyState) emptyState.style.display = 'none';
 
         tbody.innerHTML = '';
-        data.forEach(item => {
+        data.forEach((item, index) => {
             if (!item) return;
             const ketersediaan = Array.isArray(item.ketersediaan) ? item.ketersediaan : JSON.parse(item.ketersediaan || '[]');
             const row = document.createElement('tr');
             row.setAttribute('data-id', item.id || '');
             row.innerHTML = `
-                <td>${item.id || '-'}</td>
+                <td>${index + 1}</td>
+                <td>${item.nama || '-'}</td>
                 <td>${item.kos?.nama || '-'}</td>
                 <td>${item.kamar?.nama || '-'}</td>
                 <td>${item.perharian_harga ? new Intl.NumberFormat('id-ID').format(item.perharian_harga) : '-'}</td>
@@ -530,6 +615,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 <td>
                     <button class="btn btn-sm btn-warning edit-btn" 
                             data-id="${item.id || ''}" 
+                            data-nama="${item.nama || ''}" 
                             data-kos_id="${item.kos_id || ''}" 
                             data-kamar_id="${item.kamar_id || ''}" 
                             data-perharian_harga="${item.perharian_harga || ''}" 
@@ -563,7 +649,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const ketersediaan = Array.isArray(item.ketersediaan) ? item.ketersediaan : JSON.parse(item.ketersediaan || '[]');
             const ketersediaanText = ketersediaan.map(range => `${range.start_date || ''} ${range.end_date || ''}`).join(' ').toLowerCase();
             return (
-                (item.id && item.id.toString().includes(searchText)) ||
+                (item.nama && item.nama.toLowerCase().includes(searchText)) ||
                 (item.kos && item.kos.nama && item.kos.nama.toLowerCase().includes(searchText)) ||
                 (item.kamar && item.kamar.nama && item.kamar.nama.toLowerCase().includes(searchText)) ||
                 (item.perharian_harga && item.perharian_harga.toString().includes(searchText)) ||
@@ -608,6 +694,7 @@ document.addEventListener('DOMContentLoaded', function() {
         document.querySelectorAll('.edit-btn').forEach(button => {
             button.addEventListener('click', function() {
                 const id = this.getAttribute('data-id');
+                const nama = this.getAttribute('data-nama');
                 const kos_id = this.getAttribute('data-kos_id');
                 const kamar_id = this.getAttribute('data-kamar_id');
                 const perharian_harga = this.getAttribute('data-perharian_harga');
@@ -617,6 +704,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 const pertahun_harga = this.getAttribute('data-pertahun_harga');
                 const ketersediaan = JSON.parse(this.getAttribute('data-ketersediaan') || '[]');
                 document.getElementById('edit_id').value = id;
+                document.getElementById('edit_nama').value = nama;
                 document.getElementById('edit_kos_id').value = kos_id;
                 document.getElementById('edit_kamar_id').value = kamar_id;
                 document.getElementById('edit_perharian_harga').value = perharian_harga;

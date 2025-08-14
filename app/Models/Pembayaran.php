@@ -19,16 +19,16 @@ class Pembayaran extends Model
         'keterangan',
         'nominal',
         'kode_pembayaran',
+        'status', // tambahkan ini
     ];
 
     protected static function boot()
-{
-    parent::boot();
+    {
+        parent::boot();
 
-    static::created(function ($model) {
-        $model->kode_pembayaran = 'PEM/' . str_pad($model->pembayaran_id, 6, '0', STR_PAD_LEFT);
-        $model->saveQuietly();
-    });
-}
-
+        static::created(function ($model) {
+            $model->kode_pembayaran = 'PEM/' . str_pad($model->pembayaran_id, 6, '0', STR_PAD_LEFT);
+            $model->saveQuietly();
+        });
+    }
 }

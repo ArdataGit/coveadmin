@@ -38,7 +38,7 @@ class pembayaranController extends Controller
 
         DB::beginTransaction();
         try {
-            // Buat pembayaran baru
+            // Buat pembayaran baru dengan status default 'belum_lunas'
             $pembayaran = Pembayaran::create([
                 'transaksi_id' => $request->transaksi_id,
                 'tanggal'      => $request->tanggal,
@@ -46,11 +46,8 @@ class pembayaranController extends Controller
                 'tipe_bayar'   => $request->tipe_bayar,
                 'keterangan'   => $request->keterangan,
                 'nominal'      => $request->nominal,
+                'status'       => 'belum_lunas', // Tambahkan status default
             ]);
-
-            // Generate kode pembayaran format: PEM/000001
-            $pembayaran->kode_pembayaran = 'PEM/' . str_pad($pembayaran->pembayaran_id, 6, '0', STR_PAD_LEFT);
-            $pembayaran->save();
 
             // Cek apakah ini pembayaran pertama untuk transaksi ini
             $jumlahPembayaran = Pembayaran::where('transaksi_id', $request->transaksi_id)->count();
@@ -82,6 +79,7 @@ class pembayaranController extends Controller
             'tipe_bayar'   => 'required|in:dp,full',
             'keterangan'   => 'nullable|string|max:255',
             'nominal'      => 'required|integer|min:0',
+            'status'       => 'required|in:lunas,belum_lunas', // Validasi status
         ]);
 
         try {
@@ -92,6 +90,7 @@ class pembayaranController extends Controller
                 'tipe_bayar'   => $request->tipe_bayar,
                 'keterangan'   => $request->keterangan,
                 'nominal'      => $request->nominal,
+                'status'       => $request->status, // Update status
             ]);
 
             return redirect()->route('pembayaran.index', $pembayaran->transaksi_id)
@@ -107,16 +106,54 @@ class pembayaranController extends Controller
      */
     public function destroy($id)
     {
+        DB::beginTransaction();
         try {
             $pembayaran = Pembayaran::findOrFail($id);
             $transaksi_id = $pembayaran->transaksi_id;
+
+            // Cek jumlah pembayaran yang tersisa untuk transaksi ini
+            $jumlahPembayaran = Pembayaran::where('transaksi_id', $transaksi_id)->count();
+            
+            // Hapus pembayaran
             $pembayaran->delete();
 
+            // Jika ini adalah pembayaran terakhir, ubah status transaksi menjadi pending
+            if ($jumlahPembayaran === 1) {
+                Transaksi::where('id', $transaksi_id)->update([
+                    'status' => 'pending'
+                ]);
+            }
+
+            DB::commit();
             return redirect()->route('pembayaran.index', $transaksi_id)
                 ->with('success', 'Pembayaran berhasil dihapus');
         } catch (\Exception $e) {
+            DB::rollBack();
             return redirect()->route('pembayaran.index', $transaksi_id ?? null)
                 ->with('error', 'Gagal menghapus pembayaran: ' . $e->getMessage());
+        }
+    }
+    
+    /**
+     * Mengubah status pembayaran.
+     */
+    public function updateStatus(Request $request, $id)
+    {
+        $request->validate([
+            'status' => 'required|in:lunas,belum_lunas',
+        ]);
+
+        try {
+            $pembayaran = Pembayaran::findOrFail($id);
+            $pembayaran->update([
+                'status' => $request->status,
+            ]);
+
+            return redirect()->route('pembayaran.index', $pembayaran->transaksi_id)
+                ->with('success', 'Status pembayaran berhasil diperbarui');
+        } catch (\Exception $e) {
+            return redirect()->route('pembayaran.index', $pembayaran->transaksi_id ?? null)
+                ->with('error', 'Gagal memperbarui status: ' . $e->getMessage());
         }
     }
 }

@@ -7,6 +7,7 @@ use App\Http\Controllers\lokasiController;
 use App\Http\Controllers\paketHargaController;
 use App\Http\Controllers\pembayaranController;
 use App\Http\Controllers\settingController;
+use App\Http\Controllers\ticketController;
 use App\Http\Controllers\tipeKosController;
 use App\Http\Controllers\transaksiController;
 use App\Http\Controllers\userController;
@@ -109,10 +110,23 @@ Route::prefix('dashboard')->middleware('auth:admin')->group(function () {
     Route::put('/transaksi/{id}/status', [transaksiController::class, 'updateStatus']); // update status pembayaran
     Route::post('/transaksi/{id}/pembayaran', [transaksiController::class, 'pembayaran']);
     Route::delete('/transaksi/{id}', [transaksiController::class, 'destroy'])->name('transaksi.destroy');
+    Route::get('kos/{kos_id}/details', [KosController::class, 'getKosDetails'])->name('kos.details');
+    Route::get('kos/details/{kamar_id}/paket-harga', [KosController::class, 'getPaketHarga'])->name('kos.paket-harga');
 
     Route::get('/pembayaran/{transaksi_id}', [pembayaranController::class, 'index'])->name('pembayaran.index');
     Route::post('/pembayaran', [pembayaranController::class, 'store'])->name('pembayaran.store');
     Route::put('/pembayaran/{id}', [pembayaranController::class, 'update'])->name('pembayaran.update');
     Route::delete('/pembayaran/{id}', [pembayaranController::class, 'destroy'])->name('pembayaran.destroy');
+    Route::patch('pembayaran/{id}/status', [pembayaranController::class, 'updateStatus'])->name('pembayaran.updateStatus');
 
+
+    // Ticket Routes
+
+    Route::get('/tickets/data', [ticketController::class, 'data'])->name('tickets.data');
+    Route::get('/tickets', [ticketController::class, 'index'])->name('tickets.index');
+    Route::get('/tickets/create', [TicketController::class, 'create'])->name('tickets.create');
+    Route::get('/tickets/{ticket}/edit', [ticketController::class, 'edit'])->name('tickets.edit');
+    Route::put('/tickets/{ticket}', [ticketController::class, 'update'])->name('tickets.update');
+    Route::delete('/tickets/{ticket}', [ticketController::class, 'destroy'])->name('tickets.destroy');
+    Route::post('/tickets/{ticket}/admin-response', [ticketController::class, 'adminResponse'])->name('tickets.adminResponse');
 });

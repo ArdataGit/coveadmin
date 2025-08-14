@@ -12,6 +12,7 @@ class PaketHarga extends Model
     protected $table = 'paket_harga';
 
     protected $fillable = [
+        'nama',
         'kos_id',
         'kamar_id',
         'perharian_harga',
