@@ -167,22 +167,48 @@ class ticketController extends Controller
      */
     public function adminResponse(Request $request, Ticket $ticket)
     {
-        // Pastikan hanya admin yang dapat memberikan respon
-        if (!Auth::user()->is_admin) {
-            return redirect()->route('tickets.index')->with('error', 'Anda tidak memiliki izin untuk memberikan respon.');
-        }
+        // Check if the user is an admin
+        // if (!Auth::user()->is_admin) {
+        //     return response()->json([
+        //         'success' => false,
+        //         'message' => 'Anda tidak memiliki izin untuk memberikan respon.'
+        //     ], 403);
+        // }
 
-        $request->validate([
+        // Validate the request
+        $validator = Validator::make($request->all(), [
             'admin_response' => 'required|string',
             'status' => 'required|in:open,in_progress,resolved,closed',
+        ], [
+            'admin_response.required' => 'Admin response is required.',
+            'status.required' => 'Status is required.',
+            'status.in' => 'Invalid status value.',
         ]);
 
-        $ticket->update([
-            'admin_response' => $request->admin_response,
-            'status' => $request->status,
-        ]);
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => $validator->errors()->first()
+            ], 422);
+        }
 
-        return redirect()->route('tickets.index')->with('success', 'Respon admin berhasil disimpan!');
+        try {
+            // Update the ticket with admin response and status
+            $ticket->update([
+                'admin_response' => $request->admin_response,
+                'status' => $request->status,
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Respon admin berhasil disimpan!'
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to save response: ' . $e->getMessage()
+            ], 500);
+        }
     }
 
     /**

@@ -45,6 +45,7 @@
                     <th>Category</th>
                     <th>Status</th>
                     <th>Image</th>
+                    <th>Admin Response</th> <!-- New column for Admin Response -->
                     <th>Created At</th>
                     <th>Actions</th>
                 </tr>
@@ -66,6 +67,7 @@
                                 -
                             @endif
                         </td>
+                        <td>{{ $item->admin_response ? Str::limit($item->admin_response, 50) : '-' }}</td> <!-- Display Admin Response -->
                         <td>{{ $item->created_at->format('d M Y H:i') }}</td>
                         <td>
                             <button class="btn btn-sm btn-warning edit-btn" data-id="{{ $item->id }}" data-user_id="{{ $item->user_id }}" data-title="{{ $item->title }}" data-description="{{ $item->description }}" data-category="{{ $item->category }}" data-bs-toggle="modal" data-bs-target="#editTicketModal">
@@ -74,16 +76,14 @@
                             <button class="btn btn-sm btn-danger delete-btn" data-id="{{ $item->id }}" data-bs-toggle="modal" data-bs-target="#deleteTicketModal">
                                 <i class="icofont-trash"></i> Delete
                             </button>
-                            @if (Auth::user()->is_admin)
-                                <button class="btn btn-sm btn-info response-btn" data-id="{{ $item->id }}" data-admin_response="{{ $item->admin_response }}" data-status="{{ $item->status }}" data-bs-toggle="modal" data-bs-target="#responseTicketModal">
+                                <button class="btn btn-sm btn-info response-btn" data-id="{{ $item->id }}" data-admin_response="{{ $item->admin_response ?? '' }}" data-status="{{ $item->status }}" data-bs-toggle="modal" data-bs-target="#responseTicketModal">
                                     <i class="icofont-comment"></i> Respond
                                 </button>
-                            @endif
                         </td>
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="8" class="text-center">No data available</td>
+                        <td colspan="9" class="text-center">No data available</td> <!-- Updated colspan to 9 -->
                     </tr>
                 @endforelse
             </tbody>
@@ -317,7 +317,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const tbody = document.getElementById('ticket-table-body');
             tbody.innerHTML = '';
             if (data.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="8" class="text-center">No data available</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="9" class="text-center">No data available</td></tr>';
                 return;
             }
             data.forEach((item, index) => {
@@ -330,6 +330,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     <td>${item.category || '-'}</td>
                     <td>${item.status}</td>
                     <td>${item.image ? `<a href="#" class="image-preview" data-bs-toggle="modal" data-bs-target="#imagePreviewModal" data-image="/img/tickets/${item.user_id}/${item.image}"><img src="/img/tickets/${item.user_id}/${item.image}" alt="Ticket Image" style="max-width: 100px;"></a>` : '-'}</td>
+                    <td>${item.admin_response ? (item.admin_response.length > 50 ? item.admin_response.substring(0, 50) + '...' : item.admin_response) : '-'}</td>
                     <td>${new Date(item.created_at).toLocaleString('id-ID', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</td>
                     <td>
                         <button class="btn btn-sm btn-warning edit-btn" data-id="${item.id}" data-user_id="${item.user_id}" data-title="${item.title}" data-description="${item.description}" data-category="${item.category || ''}" data-bs-toggle="modal" data-bs-target="#editTicketModal">
@@ -407,37 +408,21 @@ document.addEventListener('DOMContentLoaded', function() {
                 document.getElementById('response_id').value = id;
                 document.getElementById('admin_response').value = admin_response;
                 document.getElementById('status').value = status;
-                document.getElementById('responseTicketForm').action = `{{ url('dashboard/tickets') }}/${id}/response`;
+                document.getElementById('responseTicketForm').action = `{{ url('dashboard/tickets') }}/${id}/admin-response`;
             });
         });
     }
 
     // Function to attach event listeners for image preview
-   function attachImagePreviewListeners() {
-    document.querySelectorAll('.image-preview').forEach(link => {
-        link.addEventListener('click', function(e) {
-            e.preventDefault();
-            const imageUrl = this.getAttribute('data-image');
-            const userId = this.getAttribute('data-user_id');
-
-            let finalUrl = '';
-
-            if (imageUrl && imageUrl.startsWith('http')) {
-                // Kalau sudah URL lengkap
-                finalUrl = imageUrl;
-            } else if (imageUrl && userId) {
-                // Kalau cuma nama file
-                finalUrl = `/img/${userId}/${imageUrl}`;
-            } else {
-                console.warn('Data image atau user_id tidak valid');
-                return;
-            }
-
-            document.getElementById('previewImage').src = finalUrl;
+    function attachImagePreviewListeners() {
+        document.querySelectorAll('.image-preview').forEach(link => {
+            link.addEventListener('click', function(e) {
+                e.preventDefault();
+                const imageUrl = this.getAttribute('data-image');
+                document.getElementById('previewImage').src = imageUrl;
+            });
         });
-    });
-}
-
+    }
 
     // Search functionality
     let searchTimeout;
