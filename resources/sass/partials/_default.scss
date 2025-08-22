@@ -684,6 +684,14 @@ ul {
     display: none;
 }
 
+/* Default: tampilkan logo light */
+.logo-light { display: block; }
+.logo-dark { display: none; }
+
+/* Saat dark mode aktif */
+.is_dark .logo-light { display: none; }
+.is_dark .logo-dark { display: block; }
+
 /*****************************************************
     37. Preloader CSS Here 
 ****************************/

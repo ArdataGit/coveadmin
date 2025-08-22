@@ -186,7 +186,12 @@
         <!-- Header -->
         <header class="admin-header">
             <div class="logo">
-                <a href="{{ url('/') }}"><img loading="lazy" src="{{ asset('img/logo/logo_1.png') }}" alt="Edurock Logo"></a>
+                <a href="{{ url('/') }}">
+                    <img loading="lazy" src="{{ asset('img/logo/logo_1.png') }}" 
+                 class="logo-light" style="height: auto;width: 17rem;" alt="Edurock Logo">
+            <img loading="lazy" src="{{ asset('img/logo/logo_2.png') }}" 
+                 class="logo-dark" style="height: auto;width: 17rem;" alt="Edurock Logo Dark">
+                </a>
             </div>
             <div class="d-flex align-items-center gap-3">
                 <div class="notification">
