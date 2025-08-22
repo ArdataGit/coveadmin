@@ -158,6 +158,14 @@
   --bs-body-color:#fff;
 }
 
+/* Default: tampilkan logo light */
+.logo-light { display: block; }
+.logo-dark { display: none; }
+
+/* Saat dark mode aktif */
+.is_dark .logo-light { display: none; }
+.is_dark .logo-dark { display: block; }
+
 /*------------------------------
 Default CSS
 -------------------------------*/
