@@ -149,6 +149,7 @@ class KosController extends Controller
             ->map(function ($item) {
                 // Ensure fasilitas_ids is an array
                 $item->fasilitas_ids = json_decode($item->fasilitas_ids, true) ?? [];
+                $item->dekat_dengan = json_decode($item->dekat_dengan, true) ?? [];
                 return $item;
             });
 
@@ -170,7 +171,9 @@ class KosController extends Controller
             'fasilitas_ids.*' => 'integer|exists:fasilitas,id',
             'deskripsi' => 'nullable|string',
             'jenis_kos' => 'required|in:Putra,Putri,Campur',
-            'dekat_dengan' => 'nullable|string',
+            'dekat_dengan' => 'nullable|array',
+            'dekat_dengan.*' => 'string|max:255',
+            'tipe_sewa' => 'required|in:Harian,Bulanan',
         ]);
 
         if ($validator->fails()) {
@@ -182,6 +185,7 @@ class KosController extends Controller
 
         $data = $request->all();
         $data['fasilitas_ids'] = json_encode($request->fasilitas_ids);
+        $data['dekat_dengan'] = $request->has('dekat_dengan') ? json_encode($request->dekat_dengan) : null;
         $kosDetail = KosDetail::create($data);
 
         return response()->json([
@@ -208,7 +212,9 @@ class KosController extends Controller
             'fasilitas_ids.*' => 'integer|exists:fasilitas,id',
             'deskripsi' => 'nullable|string',
             'jenis_kos' => 'required|in:Putra,Putri,Campur',
-            'dekat_dengan' => 'nullable|string',
+            'dekat_dengan' => 'nullable|array',
+            'dekat_dengan.*' => 'string|max:255',
+            'tipe_sewa' => 'required|in:Harian,Bulanan',
         ]);
 
         if ($validator->fails()) {
@@ -220,6 +226,7 @@ class KosController extends Controller
 
         $data = $request->all();
         $data['fasilitas_ids'] = json_encode($request->fasilitas_ids);
+        $data['dekat_dengan'] = $request->has('dekat_dengan') ? json_encode($request->dekat_dengan) : null;
         $kosDetail->update($data);
 
         return response()->json([

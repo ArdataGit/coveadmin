@@ -40,6 +40,7 @@
 
     <!-- Add Kos Modal -->
     <div class="modal fade" id="addKosModal" tabindex="-1" aria-labelledby="addKosModalLabel" aria-hidden="true">
+        <div id="alert-container"></div>
         <div class="modal-dialog">
             <form id="addKosForm" action="{{ route('kos.store') }}" method="POST" class="modal-content">
                 @csrf
@@ -84,6 +85,7 @@
 
     <!-- Edit Kos Modal -->
     <div class="modal fade" id="editKosModal" tabindex="-1" aria-labelledby="editKosModalLabel" aria-hidden="true">
+        <div id="alert-container"></div>
         <div class="modal-dialog">
             <form id="editKosForm" method="POST" class="modal-content">
                 @csrf

@@ -209,6 +209,21 @@
 
     <!-- Add Paket Harga Modal -->
     <div class="modal fade" id="addPaketHargaModal" tabindex="-1" aria-labelledby="addPaketHargaModalLabel" aria-hidden="true">
+        <!-- Success/Error Messages -->
+        <div id="alert-container">
+            @if (session('success'))
+                <div class="alert alert-success alert-dismissible fade show" role="alert">
+                    {{ session('success') }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            @endif
+            @if (session('error'))
+                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    {{ session('error') }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            @endif
+        </div>
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
@@ -242,9 +257,7 @@
                             <label for="kamar_id" class="form-label">Kamar</label>
                             <select class="form-control" id="kamar_id" name="kamar_id" required>
                                 <option value="">Pilih Kamar</option>
-                                @foreach ($kamars as $kamar)
-                                    <option value="{{ $kamar->id }}">{{ $kamar->nama }}</option>
-                                @endforeach
+                                <!-- Options will be populated dynamically via AJAX -->
                             </select>
                             @error('kamar_id')
                                 <small class="text-danger">{{ $message }}</small>
@@ -315,6 +328,21 @@
 
     <!-- Edit Paket Harga Modal -->
     <div class="modal fade" id="editPaketHargaModal" tabindex="-1" aria-labelledby="editPaketHargaModalLabel" aria-hidden="true">
+        <!-- Success/Error Messages -->
+        <div id="alert-container">
+            @if (session('success'))
+                <div class="alert alert-success alert-dismissible fade show" role="alert">
+                    {{ session('success') }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            @endif
+            @if (session('error'))
+                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    {{ session('error') }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            @endif
+        </div>
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
@@ -350,9 +378,7 @@
                             <label for="edit_kamar_id" class="form-label">Kamar</label>
                             <select class="form-control" id="edit_kamar_id" name="kamar_id" required>
                                 <option value="">Pilih Kamar</option>
-                                @foreach ($kamars as $kamar)
-                                    <option value="{{ $kamar->id }}">{{ $kamar->nama }}</option>
-                                @endforeach
+                                <!-- Options will be populated dynamically via AJAX -->
                             </select>
                             @error('kamar_id')
                                 <small class="text-danger">{{ $message }}</small>
@@ -446,11 +472,10 @@
     </div>
 </div>
 @endsection
-
 @section('scripts')
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // Check for CSRF token
+    // CSRF token
     const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content;
     if (!csrfToken) {
         console.error('CSRF token not found.');
@@ -517,9 +542,7 @@ document.addEventListener('DOMContentLoaded', function() {
         chip.dataset.end = endDate;
         chip.innerHTML = `${chipText} <span class="remove-chip" role="button" aria-label="Remove ${chipText}">&times;</span>`;
         container.appendChild(chip);
-        // Update hidden input
         updateKetersediaanInput(containerId, inputId);
-        // Remove chip on click
         chip.querySelector('.remove-chip').addEventListener('click', () => {
             chip.remove();
             updateKetersediaanInput(containerId, inputId);
@@ -557,6 +580,60 @@ document.addEventListener('DOMContentLoaded', function() {
             showAlert('danger', 'Please enter valid start and end dates (start date must be before or equal to end date).');
         }
     });
+// Function to fetch rooms for a given kos_id
+    function fetchKamar(kosId, kamarSelectId, selectedKamarId = null) {
+        const kamarSelect = document.getElementById(kamarSelectId);
+        kamarSelect.innerHTML = '<option value="">Pilih Kamar</option>';
+        if (!kosId) return;
+
+        fetch(`{{ url('dashboard/kos') }}/${kosId}/details`, {
+            headers: {
+                'X-CSRF-TOKEN': csrfToken,
+                'Accept': 'application/json'
+            }
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return response.json();
+        })
+        .then(response => {
+            if (!response.success) {
+                throw new Error('Request was not successful');
+            }
+            const kamars = response.data || [];
+            if (kamars.length === 0) {
+                showAlert('warning', 'No rooms available for this kos.');
+            }
+            kamars.forEach(kamar => {
+                const option = document.createElement('option');
+                option.value = kamar.id;
+                option.textContent = kamar.nama;
+                if (selectedKamarId && kamar.id == selectedKamarId) {
+                    option.selected = true;
+                }
+                kamarSelect.appendChild(option);
+            });
+        })
+        .catch(error => {
+            console.error('Error fetching kamars:', error);
+            showAlert('danger', 'Failed to load rooms. Please try again.');
+        });
+    }
+
+    // Event listener for Add Modal kos_id change
+    document.getElementById('kos_id').addEventListener('change', function() {
+        const kosId = this.value;
+        fetchKamar(kosId, 'kamar_id');
+    });
+
+    // Event listener for Edit Modal kos_id change
+    document.getElementById('edit_kos_id').addEventListener('change', function() {
+        const kosId = this.value;
+        const selectedKamarId = document.getElementById('edit_kamar_id').value;
+        fetchKamar(kosId, 'edit_kamar_id', selectedKamarId);
+    });
 
     // Function to refresh table data
     function refreshTable() {
@@ -570,9 +647,7 @@ document.addEventListener('DOMContentLoaded', function() {
         .then(data => {
             tableData = Array.isArray(data) ? data : [];
             renderTable(tableData);
-            // Update search input state
-            const searchInput = document.getElementById('searchInput');
-            searchInput.disabled = tableData.length === 0;
+            document.getElementById('searchInput').disabled = tableData.length === 0;
         })
         .catch(error => {
             console.error('Error fetching table data:', error);
@@ -706,7 +781,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 document.getElementById('edit_id').value = id;
                 document.getElementById('edit_nama').value = nama;
                 document.getElementById('edit_kos_id').value = kos_id;
-                document.getElementById('edit_kamar_id').value = kamar_id;
                 document.getElementById('edit_perharian_harga').value = perharian_harga;
                 document.getElementById('edit_perbulan_harga').value = perbulan_harga;
                 document.getElementById('edit_pertigabulan_harga').value = pertigabulan_harga;
@@ -718,6 +792,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 ketersediaan.forEach(range => {
                     createKetersediaanChip(range.start_date, range.end_date, 'edit_ketersediaan_chips', 'edit_ketersediaan_input');
                 });
+                // Populate kamar options based on kos_id
+                fetchKamar(kos_id, 'edit_kamar_id', kamar_id);
                 document.getElementById('editPaketHargaForm').action = `{{ url('dashboard/master-paket-harga') }}/${id}`;
             });
         });
@@ -736,7 +812,6 @@ document.addEventListener('DOMContentLoaded', function() {
         e.preventDefault();
         const form = this;
         const formData = new FormData(form);
-        // Validate ketersediaan JSON
         try {
             JSON.parse(formData.get('ketersediaan') || '[]');
         } catch (e) {
@@ -757,6 +832,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 form.reset();
                 addKetersediaanChips.innerHTML = '';
                 document.getElementById('add_ketersediaan_input').value = '';
+                document.getElementById('kamar_id').innerHTML = '<option value="">Pilih Kamar</option>';
                 document.getElementById('addPaketHargaModal').querySelector('.btn-close').click();
                 showAlert('success', data.message);
                 refreshTable();
@@ -775,7 +851,6 @@ document.addEventListener('DOMContentLoaded', function() {
         e.preventDefault();
         const form = this;
         const formData = new FormData(form);
-        // Validate ketersediaan JSON
         try {
             JSON.parse(formData.get('ketersediaan') || '[]');
         } catch (e) {
@@ -811,7 +886,6 @@ document.addEventListener('DOMContentLoaded', function() {
         e.preventDefault();
         const form = this;
         const formData = new FormData(form);
-
         fetch(form.action, {
             method: 'POST',
             body: formData,

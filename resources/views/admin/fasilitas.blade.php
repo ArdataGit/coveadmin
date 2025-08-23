@@ -12,7 +12,7 @@
         <div class="col-6">
             <input type="text" id="searchInput" class="form-control" placeholder="Search facilities..." style="max-width: 300px;">
         </div>
-        <div class="col-6" >
+        <div class="col-6">
             <button class="btn btn-primary" style="float: inline-end;" data-bs-toggle="modal" data-bs-target="#addFasilitasModal">
                 <i class="icofont-plus"></i> Tambah Fasilitas
             </button>
@@ -41,6 +41,7 @@
                 <tr>
                     <th>No</th>
                     <th>Nama</th>
+                    <th>Image</th>
                     <th>Created At</th>
                     <th>Actions</th>
                 </tr>
@@ -50,19 +51,34 @@
                     <tr data-id="{{ $item->id }}">
                         <td>{{ $item->id }}</td>
                         <td>{{ $item->nama }}</td>
+                        <td>
+                            @if ($item->image)
+                                <img src="{{ asset($item->image) }}" alt="{{ $item->nama }}" style="max-width: 50px; max-height: 50px;">
+                            @else
+                                -
+                            @endif
+                        </td>
                         <td>{{ $item->created_at->format('d M Y H:i') }}</td>
                         <td>
-                            <button class="btn btn-sm btn-warning edit-btn" data-id="{{ $item->id }}" data-nama="{{ $item->nama }}" data-bs-toggle="modal" data-bs-target="#editFasilitasModal">
+                            <button class="btn btn-sm btn-warning edit-btn" 
+                                    data-id="{{ $item->id }}" 
+                                    data-nama="{{ $item->nama }}" 
+                                    data-image="{{ $item->image ? Storage::url($item->image) : '' }}" 
+                                    data-bs-toggle="modal" 
+                                    data-bs-target="#editFasilitasModal">
                                 <i class="icofont-edit"></i> Edit
                             </button>
-                            <button class="btn btn-sm btn-danger delete-btn" data-id="{{ $item->id }}" data-bs-toggle="modal" data-bs-target="#deleteFasilitasModal">
+                            <button class="btn btn-sm btn-danger delete-btn" 
+                                    data-id="{{ $item->id }}" 
+                                    data-bs-toggle="modal" 
+                                    data-bs-target="#deleteFasilitasModal">
                                 <i class="icofont-trash"></i> Delete
                             </button>
                         </td>
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="4" class="text-center">No data available</td>
+                        <td colspan="5" class="text-center">No data available</td>
                     </tr>
                 @endforelse
             </tbody>
@@ -77,13 +93,21 @@
                     <h5 class="modal-title" id="addFasilitasModalLabel">Tambah Fasilitas</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-                <form id="addFasilitasForm" action="{{ route('fasilitas.store') }}" method="POST">
+                <form id="addFasilitasForm" action="{{ route('fasilitas.store') }}" method="POST" enctype="multipart/form-data">
                     @csrf
                     <div class="modal-body">
                         <div class="mb-3">
                             <label for="nama" class="form-label">Nama Fasilitas</label>
                             <input type="text" class="form-control" id="nama" name="nama" required>
                             @error('nama')
+                                <small class="text-danger">{{ $message }}</small>
+                            @enderror
+                        </div>
+                        <div class="mb-3">
+                            <label for="image" class="form-label">Image</label>
+                            <input type="file" class="form-control" id="image" name="image" accept="image/*" required>
+                            <span class="image-preview d-inline-block mt-2"></span>
+                            @error('image')
                                 <small class="text-danger">{{ $message }}</small>
                             @enderror
                         </div>
@@ -105,7 +129,7 @@
                     <h5 class="modal-title" id="editFasilitasModalLabel">Edit Fasilitas</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-                <form id="editFasilitasForm" method="POST">
+                <form id="editFasilitasForm" method="POST" enctype="multipart/form-data">
                     @csrf
                     @method('PUT')
                     <input type="hidden" name="id" id="edit_id">
@@ -114,6 +138,14 @@
                             <label for="edit_nama" class="form-label">Nama Fasilitas</label>
                             <input type="text" class="form-control" id="edit_nama" name="nama" required>
                             @error('nama')
+                                <small class="text-danger">{{ $message }}</small>
+                            @enderror
+                        </div>
+                        <div class="mb-3">
+                            <label for="edit_image" class="form-label">Image</label>
+                            <input type="file" class="form-control" id="edit_image" name="image" accept="image/*">
+                            <span class="image-preview d-inline-block mt-2"></span>
+                            @error('image')
                                 <small class="text-danger">{{ $message }}</small>
                             @enderror
                         </div>
@@ -164,6 +196,30 @@ document.addEventListener('DOMContentLoaded', function() {
         return;
     }
 
+    // Function to update image preview
+    function updateImagePreview(inputId, previewClass) {
+        const input = document.getElementById(inputId);
+        const preview = input.parentElement.querySelector(previewClass);
+        input.addEventListener('change', function() {
+            preview.innerHTML = '';
+            if (this.files && this.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const img = document.createElement('img');
+                    img.src = e.target.result;
+                    img.style.maxWidth = '100px';
+                    img.style.maxHeight = '100px';
+                    preview.appendChild(img);
+                };
+                reader.readAsDataURL(this.files[0]);
+            }
+        });
+    }
+
+    // Initialize image previews
+    updateImagePreview('image', '.image-preview');
+    updateImagePreview('edit_image', '.image-preview');
+
     // Function to refresh table data
     function refreshTable(search = '') {
         const url = search 
@@ -176,26 +232,42 @@ document.addEventListener('DOMContentLoaded', function() {
                 'Accept': 'application/json'
             }
         })
-        .then(response => response.json())
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return response.json();
+        })
         .then(data => {
             const tbody = document.getElementById('fasilitas-table-body');
             tbody.innerHTML = '';
-            if (data.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="4" class="text-center">No data available</td></tr>';
+            if (!Array.isArray(data) || data.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" class="text-center">No data available</td></tr>';
                 return;
             }
-            data.forEach(item => {
+            data.forEach((item, index) => {
                 const row = document.createElement('tr');
                 row.setAttribute('data-id', item.id);
                 row.innerHTML = `
-                    <td>${index + 1}</td> 
-                    <td>${item.nama}</td>
-                    <td>${item.created_at}</td>
+                    <td>${index + 1}</td>
+                    <td>${item.nama || '-'}</td>
                     <td>
-                        <button class="btn btn-sm btn-warning edit-btn" data-id="${item.id}" data-nama="${item.nama}" data-bs-toggle="modal" data-bs-target="#editFasilitasModal">
+                        ${item.image ? `<img src="{{ asset($item->image) }}" alt="${item.nama || ''}" style="max-width: 50px; max-height: 50px;">` : '-'}
+                    </td>
+                    <td>${item.created_at || '-'}</td>
+                    <td>
+                        <button class="btn btn-sm btn-warning edit-btn" 
+                                data-id="${item.id}" 
+                                data-nama="${item.nama || ''}" 
+                                data-image="${item.image || ''}" 
+                                data-bs-toggle="modal" 
+                                data-bs-target="#editFasilitasModal">
                             <i class="icofont-edit"></i> Edit
                         </button>
-                        <button class="btn btn-sm btn-danger delete-btn" data-id="${item.id}" data-bs-toggle="modal" data-bs-target="#deleteFasilitasModal">
+                        <button class="btn btn-sm btn-danger delete-btn" 
+                                data-id="${item.id}" 
+                                data-bs-toggle="modal" 
+                                data-bs-target="#deleteFasilitasModal">
                             <i class="icofont-trash"></i> Delete
                         </button>
                     </td>
@@ -235,8 +307,19 @@ document.addEventListener('DOMContentLoaded', function() {
             button.addEventListener('click', function() {
                 const id = this.getAttribute('data-id');
                 const nama = this.getAttribute('data-nama');
+                const image = this.getAttribute('data-image');
                 document.getElementById('edit_id').value = id;
                 document.getElementById('edit_nama').value = nama;
+                // Update image preview
+                const preview = document.getElementById('edit_image').parentElement.querySelector('.image-preview');
+                preview.innerHTML = '';
+                if (image) {
+                    const img = document.createElement('img');
+                    img.src = image;
+                    img.style.maxWidth = '100px';
+                    img.style.maxHeight = '100px';
+                    preview.appendChild(img);
+                }
                 document.getElementById('editFasilitasForm').action = `{{ url('dashboard/master-fasilitas') }}/${id}`;
             });
         });
@@ -260,9 +343,6 @@ document.addEventListener('DOMContentLoaded', function() {
         }, 300); // Debounce to prevent excessive requests
     });
 
-    // Initial attachment of button listeners
-    attachButtonListeners();
-
     // AJAX for Add Form
     document.getElementById('addFasilitasForm').addEventListener('submit', function(e) {
         e.preventDefault();
@@ -277,13 +357,20 @@ document.addEventListener('DOMContentLoaded', function() {
                 'Accept': 'application/json'
             }
         })
-        .then(response => response.json())
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return response.json();
+        })
         .then(data => {
             if (data.success) {
                 form.reset();
                 document.getElementById('addFasilitasModal').querySelector('.btn-close').click();
-                showAlert('success', data.message);
+                showAlert('success', data.message || 'Facility added successfully');
                 refreshTable(document.getElementById('searchInput').value);
+                // Reset image preview
+                document.getElementById('image').parentElement.querySelector('.image-preview').innerHTML = '';
             } else {
                 showAlert('danger', data.message || 'Failed to add facility');
             }
@@ -308,11 +395,16 @@ document.addEventListener('DOMContentLoaded', function() {
                 'Accept': 'application/json'
             }
         })
-        .then(response => response.json())
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return response.json();
+        })
         .then(data => {
             if (data.success) {
                 document.getElementById('editFasilitasModal').querySelector('.btn-close').click();
-                showAlert('success', data.message);
+                showAlert('success', data.message || 'Facility updated successfully');
                 refreshTable(document.getElementById('searchInput').value);
             } else {
                 showAlert('danger', data.message || 'Failed to update facility');
@@ -338,11 +430,16 @@ document.addEventListener('DOMContentLoaded', function() {
                 'Accept': 'application/json'
             }
         })
-        .then(response => response.json())
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return response.json();
+        })
         .then(data => {
             if (data.success) {
                 document.getElementById('deleteFasilitasModal').querySelector('.btn-close').click();
-                showAlert('success', data.message);
+                showAlert('success', data.message || 'Facility deleted successfully');
                 refreshTable(document.getElementById('searchInput').value);
             } else {
                 showAlert('danger', data.message || 'Failed to delete facility');
@@ -353,6 +450,10 @@ document.addEventListener('DOMContentLoaded', function() {
             showAlert('danger', 'An error occurred. Please try again.');
         });
     });
+
+    // Initial attachment of button listeners and table refresh
+    attachButtonListeners();
+    refreshTable();
 });
 </script>
 @endsection

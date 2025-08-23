@@ -128,6 +128,15 @@
 
     <!-- Modal Tambah Pembayaran -->
     <div class="modal fade" id="tambahPembayaranModal" tabindex="-1">
+        <!-- Alert -->
+        <div id="alert-container">
+            @if (session('success'))
+                <div class="alert alert-success alert-dismissible fade show">{{ session('success') }}</div>
+            @endif
+            @if (session('error'))
+                <div class="alert alert-danger alert-dismissible fade show">{{ session('error') }}</div>
+            @endif
+        </div>
         <div class="modal-dialog">
             <div class="modal-content">
                 <form method="POST" action="{{ route('pembayaran.store') }}">
@@ -176,6 +185,16 @@
 
     <!-- Modal Edit Pembayaran -->
     <div class="modal fade" id="editPembayaranModal" tabindex="-1">
+        
+        <!-- Alert -->
+        <div id="alert-container">
+            @if (session('success'))
+                <div class="alert alert-success alert-dismissible fade show">{{ session('success') }}</div>
+            @endif
+            @if (session('error'))
+                <div class="alert alert-danger alert-dismissible fade show">{{ session('error') }}</div>
+            @endif
+        </div>
         <div class="modal-dialog">
             <div class="modal-content">
                 <form id="editPembayaranForm" method="POST">

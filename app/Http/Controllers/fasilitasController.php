@@ -33,6 +33,7 @@ class FasilitasController extends Controller
             return [
                 'id' => $item->id,
                 'nama' => $item->nama,
+                'image' => $item->image,
                 'created_at' => $item->created_at->format('d M Y H:i'),
             ];
         });
@@ -40,77 +41,77 @@ class FasilitasController extends Controller
         return response()->json($fasilitas);
     }
 
-    /**
-     * Store a new facility
-     */
     public function store(Request $request)
-    {
-        $validator = Validator::make($request->all(), [
-            'nama' => 'required|string|max:255',
-        ]);
+{
+    $validator = Validator::make($request->all(), [
+        'nama'  => 'required|string|max:255',
+        'image' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
+    ]);
 
-        if ($validator->fails()) {
-            return response()->json(['success' => false, 'message' => $validator->errors()->first()], 422);
-        }
-
-        Fasilitas::create($request->only('nama'));
-
-        // Return JSON for AJAX or redirect for non-AJAX
-        if ($request->expectsJson()) {
-            return response()->json(['success' => true, 'message' => 'Facility added successfully']);
-        }
-
-        return redirect()->route('fasilitas.index')->with('success', 'Facility added successfully');
+    if ($validator->fails()) {
+        return response()->json(['success' => false, 'message' => $validator->errors()->first()], 422);
     }
 
-    /**
-     * Update an existing facility
-     */
-    public function update(Request $request, $id)
-    {
-        $validator = Validator::make($request->all(), [
-            'nama' => 'required|string|max:255',
-        ]);
+    $data = $request->only('nama');
 
-        if ($validator->fails()) {
-            return response()->json(['success' => false, 'message' => $validator->errors()->first()], 422);
-        }
+    if ($request->hasFile('image')) {
+        $file     = $request->file('image');
+        $filename = time() . '_' . uniqid() . '.' . $file->getClientOriginalExtension();
+        $file->move(public_path('fasilitas'), $filename);
 
-        $fasilitas = Fasilitas::findOrFail($id);
-        $fasilitas->update($request->only('nama'));
-
-        // Return JSON for AJAX or redirect for non-AJAX
-        if ($request->expectsJson()) {
-            return response()->json(['success' => true, 'message' => 'Facility updated successfully']);
-        }
-
-        return redirect()->route('fasilitas.index')->with('success', 'Facility updated successfully');
+        $data['image'] = 'fasilitas/' . $filename; // simpan path relatif
     }
 
-    /**
-     * Delete a facility
-     */
-    public function destroy($id)
-    {
-        try {
-            $fasilitas = Fasilitas::findOrFail($id);
-            $fasilitas->delete();
+    Fasilitas::create($data);
 
-            // Return JSON for AJAX or redirect for non-AJAX
-            if (request()->expectsJson()) {
-                return response()->json(['success' => true, 'message' => 'Facility deleted successfully']);
-            }
+    return response()->json(['success' => true, 'message' => 'Facility added successfully']);
+}
 
-            return redirect()->route('fasilitas.index')->with('success', 'Facility deleted successfully');
-        } catch (\Exception $e) {
-            // Return JSON for AJAX or redirect for non-AJAX
-            if (request()->expectsJson()) {
-                return response()->json(['success' => false, 'message' => 'Failed to delete facility: ' . $e->getMessage()], 422);
-            }
+public function update(Request $request, $id)
+{
+    $validator = Validator::make($request->all(), [
+        'nama'  => 'required|string|max:255',
+        'image' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
+    ]);
 
-            return redirect()->route('fasilitas.index')->with('error', 'Failed to delete facility: ' . $e->getMessage());
-        }
+    if ($validator->fails()) {
+        return response()->json(['success' => false, 'message' => $validator->errors()->first()], 422);
     }
+
+    $fasilitas = Fasilitas::findOrFail($id);
+    $data = $request->only('nama');
+
+    if ($request->hasFile('image')) {
+        // hapus file lama kalau ada
+        if ($fasilitas->image && file_exists(public_path($fasilitas->image))) {
+            unlink(public_path($fasilitas->image));
+        }
+
+        $file     = $request->file('image');
+        $filename = time() . '_' . uniqid() . '.' . $file->getClientOriginalExtension();
+        $file->move(public_path('fasilitas'), $filename);
+
+        $data['image'] = 'fasilitas/' . $filename;
+    }
+
+    $fasilitas->update($data);
+
+    return response()->json(['success' => true, 'message' => 'Facility updated successfully']);
+}
+
+public function destroy($id)
+{
+    $fasilitas = Fasilitas::findOrFail($id);
+
+    if ($fasilitas->image && file_exists(public_path($fasilitas->image))) {
+        unlink(public_path($fasilitas->image));
+    }
+
+    $fasilitas->delete();
+
+    return response()->json(['success' => true, 'message' => 'Facility deleted successfully']);
+}
+
 
     public function getAll()
     {

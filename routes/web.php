@@ -64,6 +64,7 @@ Route::prefix('dashboard')->middleware('auth:admin')->group(function () {
     Route::put('/master-user/{id}', [userController::class, 'update'])->name('user.update');
     Route::delete('/master-user/{id}', [userController::class, 'destroy'])->name('user.destroy');
 
+
     //master kos Routes
     Route::get('/master-kos', [kosController::class, 'index'])->name('kos.index');
     Route::get('/master-kos/data', [kosController::class, 'data'])->name('kos.data');
@@ -77,6 +78,7 @@ Route::prefix('dashboard')->middleware('auth:admin')->group(function () {
     Route::post('/kos-detail/{kos_id}', [KosController::class, 'detailStore'])->name('kos.detail.store');
     Route::put('/kos-detail/{id}', [KosController::class, 'detailUpdate'])->name('kos.detail.update');
     Route::delete('/kos-detail/{id}', [KosController::class, 'detailDestroy'])->name('kos.detail.destroy');
+
 
     // Placeholder for Gallery route
     Route::get('/dashboard/kos/{kos_id}/gallery/{kamar_id}', [KosController::class, 'gallery'])->name('kos.gallery');
@@ -121,7 +123,6 @@ Route::prefix('dashboard')->middleware('auth:admin')->group(function () {
 
 
     // Ticket Routes
-
     Route::get('/tickets/data', [ticketController::class, 'data'])->name('tickets.data');
     Route::get('/tickets', [ticketController::class, 'index'])->name('tickets.index');
     Route::get('/tickets/create', [TicketController::class, 'create'])->name('tickets.create');
@@ -129,4 +130,5 @@ Route::prefix('dashboard')->middleware('auth:admin')->group(function () {
     Route::put('/tickets/{ticket}', [ticketController::class, 'update'])->name('tickets.update');
     Route::delete('/tickets/{ticket}', [ticketController::class, 'destroy'])->name('tickets.destroy');
     Route::post('/tickets/{ticket}/admin-response', [ticketController::class, 'adminResponse'])->name('tickets.adminResponse');
+
 });

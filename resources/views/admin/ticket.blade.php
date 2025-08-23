@@ -92,6 +92,21 @@
 
     <!-- Add Ticket Modal -->
     <div class="modal fade" id="addTicketModal" tabindex="-1" aria-labelledby="addTicketModalLabel" aria-hidden="true">
+        <!-- Success/Error Messages -->
+        <div id="alert-container">
+            @if (session('success'))
+                <div class="alert alert-success alert-dismissible fade show" role="alert">
+                    {{ session('success') }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            @endif
+            @if (session('error'))
+                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    {{ session('error') }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            @endif
+        </div>
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
@@ -148,6 +163,21 @@
 
     <!-- Edit Ticket Modal -->
     <div class="modal fade" id="editTicketModal" tabindex="-1" aria-labelledby="editTicketModalLabel" aria-hidden="true">
+        <!-- Success/Error Messages -->
+        <div id="alert-container">
+            @if (session('success'))
+                <div class="alert alert-success alert-dismissible fade show" role="alert">
+                    {{ session('success') }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            @endif
+            @if (session('error'))
+                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    {{ session('error') }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            @endif
+        </div>
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
@@ -339,9 +369,9 @@ document.addEventListener('DOMContentLoaded', function() {
                         <button class="btn btn-sm btn-danger delete-btn" data-id="${item.id}" data-bs-toggle="modal" data-bs-target="#deleteTicketModal">
                             <i class="icofont-trash"></i> Delete
                         </button>
-                        ${@json(Auth::user()->is_admin) ? `<button class="btn btn-sm btn-info response-btn" data-id="${item.id}" data-admin_response="${item.admin_response || ''}" data-status="${item.status}" data-bs-toggle="modal" data-bs-target="#responseTicketModal">
+                        <button class="btn btn-sm btn-info response-btn" data-id="${item.id}" data-admin_response="${item.admin_response || ''}" data-status="${item.status}" data-bs-toggle="modal" data-bs-target="#responseTicketModal">
                             <i class="icofont-comment"></i> Respond
-                        </button>` : ''}
+                        </button>
                     </td>
                 `;
                 tbody.appendChild(row);

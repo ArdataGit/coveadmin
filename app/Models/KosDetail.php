@@ -21,6 +21,7 @@ class KosDetail extends Model
         'deskripsi',
         'jenis_kos',
         'dekat_dengan',
+        'tipe_sewa'
     ];
 
     protected $casts = [

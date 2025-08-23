@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Hash;
 
@@ -13,6 +14,173 @@ class userController extends Controller
     {
         $users = User::all();
         return view('admin.user', compact('users')); // Adjust to 'master-user' if needed
+    }
+
+    /**
+     * Login API (return JSON + token)
+     */
+    public function login(Request $request)
+    {
+        $credentials = $request->validate([
+            'email'    => 'required|email',
+            'password' => 'required'
+        ]);
+
+        if (!Auth::attempt($credentials)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Email atau password salah',
+            ], 401);
+        }
+
+        $user  = Auth::user();
+        $token = $user->createToken('auth_token')->plainTextToken;
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Login berhasil',
+            'user'    => $user,
+            'token'   => $token,
+        ]);
+    }
+
+    /**
+     * Logout API (hapus token)
+     */
+    public function logout(Request $request)
+    {
+        $request->user()->currentAccessToken()->delete();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Logout berhasil'
+        ]);
+    }
+
+    /**
+     * Register API (user daftar sendiri)
+     */
+    public function register(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'nama' => 'required|string|max:255',
+            'nik' => 'required|numeric|digits:16|unique:users,nik',
+            'email' => 'required|email|unique:users,email',
+            'password' => 'required|string|min:8',
+            'alamat' => 'required|string',
+            // 'gambarktp' => 'required|image|mimes:jpeg,png,jpg|max:2048',
+            // 'fotoselfie' => 'required|image|mimes:jpeg,png,jpg|max:2048',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['success' => false, 'message' => $validator->errors()->first()], 422);
+        }
+
+        $data = $request->only('nama', 'nik', 'email', 'alamat');
+        $data['status'] = 'active'; // default status saat daftar
+        $data['password'] = Hash::make($request->password);
+
+        try {
+            // // upload files
+            // $ktpFilename = time() . '_' . $request->file('gambarktp')->getClientOriginalName();
+            // $selfieFilename = time() . '_' . $request->file('fotoselfie')->getClientOriginalName();
+
+            $user = User::create(array_merge($data));
+
+            // // simpan file KTP
+            // $ktpPath = public_path("img/user/{$user->id}/gambarktp");
+            // if (!file_exists($ktpPath)) mkdir($ktpPath, 0755, true);
+            // $request->file('gambarktp')->move($ktpPath, $ktpFilename);
+
+            // // simpan file selfie
+            // $selfiePath = public_path("img/user/{$user->id}/fotoselfie");
+            // if (!file_exists($selfiePath)) mkdir($selfiePath, 0755, true);
+            // $request->file('fotoselfie')->move($selfiePath, $selfieFilename);
+
+            // // otomatis login setelah register
+            // $token = $user->createToken('auth_token')->plainTextToken;
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Register berhasil',
+                'user'    => $user,
+                // 'token'   => $token
+            ]);
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => 'Failed to register: ' . $e->getMessage()], 500);
+        }
+    }
+
+    /**
+     * Update akun (user update profilnya sendiri)
+     */
+    public function updateAccount(Request $request)
+    {
+        $user = $request->user(); // dari token
+
+        $validator = Validator::make($request->all(), [
+            'nama' => 'sometimes|string|max:255',
+            'nik' => 'sometimes|numeric|digits:16|unique:users,nik,' . $user->id,
+            'email' => 'sometimes|email|unique:users,email,' . $user->id,
+            'alamat' => 'sometimes|string',
+            'password' => 'nullable|string|min:8',
+            'gambarktp' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
+            'fotoselfie' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['success' => false, 'message' => $validator->errors()->first()], 422);
+        }
+
+        // update data basic
+        $user->fill($request->only('nama', 'nik', 'email', 'alamat'));
+
+        if ($request->filled('password')) {
+            $user->password = Hash::make($request->password);
+        }
+
+        // update KTP
+        if ($request->hasFile('gambarktp')) {
+            if ($user->gambarktp) {
+                $oldFile = public_path("img/user/{$user->id}/gambarktp/{$user->gambarktp}");
+                if (file_exists($oldFile)) unlink($oldFile);
+            }
+            $filename = time() . '_' . $request->file('gambarktp')->getClientOriginalName();
+            $path = public_path("img/user/{$user->id}/gambarktp");
+            if (!file_exists($path)) mkdir($path, 0755, true);
+            $request->file('gambarktp')->move($path, $filename);
+            $user->gambarktp = $filename;
+        }
+
+        // update selfie
+        if ($request->hasFile('fotoselfie')) {
+            if ($user->fotoselfie) {
+                $oldFile = public_path("img/user/{$user->id}/fotoselfie/{$user->fotoselfie}");
+                if (file_exists($oldFile)) unlink($oldFile);
+            }
+            $filename = time() . '_' . $request->file('fotoselfie')->getClientOriginalName();
+            $path = public_path("img/user/{$user->id}/fotoselfie");
+            if (!file_exists($path)) mkdir($path, 0755, true);
+            $request->file('fotoselfie')->move($path, $filename);
+            $user->fotoselfie = $filename;
+        }
+
+        $user->save();
+
+        return response()->json(['success' => true, 'message' => 'Akun berhasil diperbarui', 'user' => $user]);
+    }
+
+     /**
+     * Get profile (user login)
+     */
+    public function profile(Request $request)
+    {
+        $user = $request->user(); // otomatis dari sanctum token
+
+        return response()->json([
+            'success' => true,
+            'user'    => $user
+        ]);
     }
 
     public function data(Request $request)

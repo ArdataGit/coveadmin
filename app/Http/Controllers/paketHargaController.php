@@ -23,6 +23,8 @@ class paketHargaController extends Controller
         return view('admin.master-paket-harga', compact('paketHargas', 'koses', 'kamars'));
     }
 
+    
+
     /**
      * Return JSON data for the table.
      */
