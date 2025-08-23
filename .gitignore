@@ -25,3 +25,11 @@ Homestead.yaml
 Thumbs.db
 /public/img/logo/SetupEScribe2_OXVA.exe
 /public/img/logo/fungsionalapp_1755807340.sql.gz
+/public/img/user/
+/public/img/logo/*.sql.gz
+/public/img/logo/*.exe
+/public/storage/
+/storage/
+*.sql
+*.gz
+*.exe
