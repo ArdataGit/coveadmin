@@ -16,7 +16,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Storage;
 
-class KosController extends Controller
+class kosController extends Controller
 {
     /**
      * Display the master kos index view.

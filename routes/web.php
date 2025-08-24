@@ -72,21 +72,17 @@ Route::prefix('dashboard')->middleware('auth:admin')->group(function () {
     Route::delete('/master-kos/{id}', [kosController::class, 'destroy'])->name('kos.destroy');
     
     // Kos Detail routes
-    Route::get('/kos-detail/{kos_id}', [KosController::class, 'detail'])->name('kos.detail');
-    Route::get('/kos-detail/{kos_id}/data', [KosController::class, 'detailData'])->name('kos.detail.data');
-    Route::post('/kos-detail/{kos_id}', [KosController::class, 'detailStore'])->name('kos.detail.store');
-    Route::put('/kos-detail/{id}', [KosController::class, 'detailUpdate'])->name('kos.detail.update');
-    Route::delete('/kos-detail/{id}', [KosController::class, 'detailDestroy'])->name('kos.detail.destroy');
+    Route::get('/kos-detail/{kos_id}', [kosController::class, 'detail'])->name('kos.detail');
+    Route::get('/kos-detail/{kos_id}/data', [kosController::class, 'detailData'])->name('kos.detail.data');
+    Route::post('/kos-detail/{kos_id}', [kosController::class, 'detailStore'])->name('kos.detail.store');
+    Route::put('/kos-detail/{id}', [kosController::class, 'detailUpdate'])->name('kos.detail.update');
+    Route::delete('/kos-detail/{id}', [kosController::class, 'detailDestroy'])->name('kos.detail.destroy');
 
-<<<<<<< HEAD
-
-=======
->>>>>>> 30bba5f2ba209a16bdda083ce0471cceea6b23a5
     // Placeholder for Gallery route
-    Route::get('/dashboard/kos/{kos_id}/gallery/{kamar_id}', [KosController::class, 'gallery'])->name('kos.gallery');
-    Route::get('/dashboard/kos/{kos_id}/gallery/{kamar_id}/data', [KosController::class, 'galleryData'])->name('kos.gallery.data');
-    Route::post('/dashboard/kos/{kos_id}/gallery/{kamar_id}', [KosController::class, 'galleryStore'])->name('kos.gallery.store');
-    Route::delete('/dashboard/kos/{kos_id}/gallery/{kamar_id}/{id}', [KosController::class, 'galleryDestroy'])->name('kos.gallery.destroy');
+    Route::get('/dashboard/kos/{kos_id}/gallery/{kamar_id}', [kosController::class, 'gallery'])->name('kos.gallery');
+    Route::get('/dashboard/kos/{kos_id}/gallery/{kamar_id}/data', [kosController::class, 'galleryData'])->name('kos.gallery.data');
+    Route::post('/dashboard/kos/{kos_id}/gallery/{kamar_id}', [kosController::class, 'galleryStore'])->name('kos.gallery.store');
+    Route::delete('/dashboard/kos/{kos_id}/gallery/{kamar_id}/{id}', [kosController::class, 'galleryDestroy'])->name('kos.gallery.destroy');
 
     // Paket Harga Routes
     Route::get('/master-paket-harga', [paketHargaController::class, 'index'])->name('paket-harga.index');
@@ -114,8 +110,8 @@ Route::prefix('dashboard')->middleware('auth:admin')->group(function () {
     Route::put('/transaksi/{id}/status', [transaksiController::class, 'updateStatus']); // update status pembayaran
     Route::post('/transaksi/{id}/pembayaran', [transaksiController::class, 'pembayaran']);
     Route::delete('/transaksi/{id}', [transaksiController::class, 'destroy'])->name('transaksi.destroy');
-    Route::get('kos/{kos_id}/details', [KosController::class, 'getKosDetails'])->name('kos.details');
-    Route::get('kos/details/{kamar_id}/paket-harga', [KosController::class, 'getPaketHarga'])->name('kos.paket-harga');
+    Route::get('kos/{kos_id}/details', [kosController::class, 'getKosDetails'])->name('kos.details');
+    Route::get('kos/details/{kamar_id}/paket-harga', [kosController::class, 'getPaketHarga'])->name('kos.paket-harga');
 
     Route::get('/pembayaran/{transaksi_id}', [pembayaranController::class, 'index'])->name('pembayaran.index');
     Route::post('/pembayaran', [pembayaranController::class, 'store'])->name('pembayaran.store');
@@ -125,10 +121,6 @@ Route::prefix('dashboard')->middleware('auth:admin')->group(function () {
 
 
     // Ticket Routes
-<<<<<<< HEAD
-=======
-
->>>>>>> 30bba5f2ba209a16bdda083ce0471cceea6b23a5
     Route::get('/tickets/data', [ticketController::class, 'data'])->name('tickets.data');
     Route::get('/tickets', [ticketController::class, 'index'])->name('tickets.index');
     Route::get('/tickets/create', [TicketController::class, 'create'])->name('tickets.create');
@@ -136,8 +128,4 @@ Route::prefix('dashboard')->middleware('auth:admin')->group(function () {
     Route::put('/tickets/{ticket}', [ticketController::class, 'update'])->name('tickets.update');
     Route::delete('/tickets/{ticket}', [ticketController::class, 'destroy'])->name('tickets.destroy');
     Route::post('/tickets/{ticket}/admin-response', [ticketController::class, 'adminResponse'])->name('tickets.adminResponse');
-<<<<<<< HEAD
-
-=======
->>>>>>> 30bba5f2ba209a16bdda083ce0471cceea6b23a5
 });

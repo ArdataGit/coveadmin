@@ -6,7 +6,7 @@ use App\Models\Fasilitas;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 
-class FasilitasController extends Controller
+class fasilitasController extends Controller
 {
     /**
      * Display a listing of facilities
