@@ -239,7 +239,7 @@
                         </div>
                     </div>
                     <div class="modal-footer">
-                        <button class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
                         <button class="btn btn-primary">Update</button>
                     </div>
                 </form>
@@ -266,7 +266,7 @@
                         </div>
                     </div>
                     <div class="modal-footer">
-                        <button class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
                         <button class="btn btn-primary">Update Status</button>
                     </div>
                 </form>
@@ -285,7 +285,7 @@
                     <div class="modal-header"><h5>Hapus Pembayaran</h5></div>
                     <div class="modal-body">Yakin hapus pembayaran ini?</div>
                     <div class="modal-footer">
-                        <button class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
                         <button class="btn btn-danger">Hapus</button>
                     </div>
                 </form>
