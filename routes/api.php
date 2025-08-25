@@ -25,17 +25,17 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 });
 
 // ==================== TRANSAKSI ====================
-Route::post('/transaksi', [TransaksiController::class, 'store']);
-Route::get('/transaksi/user/{userId}', [TransaksiController::class, 'getByUser'])->name('transaksi.getByUser');
-Route::get('/transaksi/{id}/invoice', [TransaksiController::class, 'invoice'])->name('transaksi.invoice');
+Route::post('/transaksi', [transaksiController::class, 'store']);
+Route::get('/transaksi/user/{userId}', [transaksiController::class, 'getByUser'])->name('transaksi.getByUser');
+Route::get('/transaksi/{id}/invoice', [transaksiController::class, 'invoice'])->name('transaksi.invoice');
 
 // ==================== MASTER DATA ====================
-Route::get('/getFasilitas', [FasilitasController::class, 'getAll']);
-Route::get('/getLantai', [LantaiController::class, 'getAll']);
-Route::get('/getLokasi', [LokasiController::class, 'getAll']);
-Route::get('/getTipekos', [TipeKosController::class, 'getAll']);
-Route::get('/getKos', [KosController::class, 'getAllData']);
+Route::get('/getFasilitas', [fasilitasController::class, 'getAll']);
+Route::get('/getLantai', [lantaiController::class, 'getAll']);
+Route::get('/getLokasi', [lokasiController::class, 'getAll']);
+Route::get('/getTipekos', [tipeKosController::class, 'getAll']);
+Route::get('/getKos', [kosController::class, 'getAllData']);
 
 // ==================== TICKET ====================
-Route::get('/tickets/user', [TicketController::class, 'getTicketsByUser'])->name('tickets.user');
-Route::post('/tickets', [TicketController::class, 'store'])->name('tickets.store');
+Route::get('/tickets/user', [ticketController::class, 'getTicketsByUser'])->name('tickets.user');
+Route::post('/tickets', [ticketController::class, 'store'])->name('tickets.store');
