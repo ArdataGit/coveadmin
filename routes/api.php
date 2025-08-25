@@ -3,22 +3,22 @@
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
-use App\Http\Controllers\FasilitasController;
-use App\Http\Controllers\KosController;
-use App\Http\Controllers\LantaiController;
-use App\Http\Controllers\LokasiController;
-use App\Http\Controllers\TicketController;
-use App\Http\Controllers\TipeKosController;
-use App\Http\Controllers\TransaksiController;
-use App\Http\Controllers\UserController;
+use App\Http\Controllers\fasilitasController;
+use App\Http\Controllers\kosController;
+use App\Http\Controllers\lantaiController;
+use App\Http\Controllers\lokasiController;
+use App\Http\Controllers\ticketController;
+use App\Http\Controllers\tipeKosController;
+use App\Http\Controllers\transaksiController;
+use App\Http\Controllers\userController;
 
 // ==================== AUTH ====================
-Route::post('/login', [UserController::class, 'login']);
+Route::post('/login', [userController::class, 'login']);
 // register
-Route::post('/register', [UserController::class, 'register']);
-Route::middleware('auth:sanctum')->post('/logout', [UserController::class, 'logout']);
-Route::middleware('auth:sanctum')->post('/account/update', [UserController::class, 'updateAccount']);
-Route::middleware('auth:sanctum')->get('/account', [UserController::class, 'profile']);
+Route::post('/register', [userController::class, 'register']);
+Route::middleware('auth:sanctum')->post('/logout', [userController::class, 'logout']);
+Route::middleware('auth:sanctum')->post('/account/update', [userController::class, 'updateAccount']);
+Route::middleware('auth:sanctum')->get('/account', [userController::class, 'profile']);
 
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
