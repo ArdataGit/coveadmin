@@ -16,10 +16,6 @@
             </button>
         </div>
     </div>
-<<<<<<< HEAD
-
-=======
->>>>>>> 30bba5f2ba209a16bdda083ce0471cceea6b23a5
     <!-- Success/Error Messages -->
     <div id="alert-container">
         @if (session('success'))

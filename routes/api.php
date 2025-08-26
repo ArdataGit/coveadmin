@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\transaksiProdukController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -23,6 +24,11 @@ Route::middleware('auth:sanctum')->get('/account', [userController::class, 'prof
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
 });
+
+// ==================== TRANSAKSI PRODUK ====================
+Route::get('/transaksi-produk/user/{userId}', [transaksiProdukController::class, 'getByUserProduk'])->name('transaksi-produk.getByUser');
+Route::post('/transaksi-produk', [transaksiProdukController::class, 'store'])->name('transaksi-produk.store');
+
 
 // ==================== TRANSAKSI ====================
 Route::post('/transaksi', [transaksiController::class, 'store']);

@@ -1,15 +1,18 @@
 <?php
 
 use App\Http\Controllers\AdminAuthController;
+use App\Http\Controllers\kategoriController;
 use App\Http\Controllers\kosController;
 use App\Http\Controllers\lantaiController;
 use App\Http\Controllers\lokasiController;
 use App\Http\Controllers\paketHargaController;
 use App\Http\Controllers\pembayaranController;
+use App\Http\Controllers\produkController;
 use App\Http\Controllers\settingController;
 use App\Http\Controllers\ticketController;
 use App\Http\Controllers\tipeKosController;
 use App\Http\Controllers\transaksiController;
+use App\Http\Controllers\transaksiProdukController;
 use App\Http\Controllers\userController;
 use App\Http\Controllers\fasilitasController;
 use Illuminate\Support\Facades\Route;
@@ -119,6 +122,25 @@ Route::prefix('dashboard')->middleware('auth:admin')->group(function () {
     Route::delete('/pembayaran/{id}', [pembayaranController::class, 'destroy'])->name('pembayaran.destroy');
     Route::patch('pembayaran/{id}/status', [pembayaranController::class, 'updateStatus'])->name('pembayaran.updateStatus');
 
+    //produk Routes
+    Route::get('/produk/', [produkController::class, 'index'])->name('produk.index');
+    Route::post('/produk/',  [produkController::class, 'store'])->name('produk.store');
+    Route::put('/produk/{id}', [produkController::class, 'update'])->name('produk.update');
+    Route::delete('/produk/{id}', [produkController::class, 'destroy'])->name('produk.destroy');
+    Route::get('/produk/data', [produkController::class, 'data'])->name('produk.data'); // untuk ajax search
+    Route::get('/produk/{id}/gambar', [produkController::class, 'indexGambar'])->name('produk.gambar'); // untuk menampilkan galeri gambar produk
+    
+    // Gambar produk
+    Route::post('/produk/{id_produk}/gambar', [produkController::class, 'storeGambarOnly'])->name('produk.gambar.store');
+    Route::delete('/produk/gambar/{id_gambar}', [produkController::class, 'destroyGambar'])->name('produk.gambar.destroy');
+
+    
+    // Kategori Routes
+    Route::get('/kategori/', [kategoriController::class, 'index'])->name('kategori.index');
+    Route::post('/kategori/', [kategoriController::class, 'store'])->name('kategori.store');
+    Route::put('/kategori/{id}', [kategoriController::class, 'update'])->name('kategori.update');
+    Route::delete('/kategori/{id}', [kategoriController::class, 'destroy'])->name('kategori.destroy');
+    Route::get('/kategori/data', [kategoriController::class, 'data'])->name('kategori.data'); // untuk ajax search
 
     // Ticket Routes
     Route::get('/tickets/data', [ticketController::class, 'data'])->name('tickets.data');
@@ -128,4 +150,12 @@ Route::prefix('dashboard')->middleware('auth:admin')->group(function () {
     Route::put('/tickets/{ticket}', [ticketController::class, 'update'])->name('tickets.update');
     Route::delete('/tickets/{ticket}', [ticketController::class, 'destroy'])->name('tickets.destroy');
     Route::post('/tickets/{ticket}/admin-response', [ticketController::class, 'adminResponse'])->name('tickets.adminResponse');
+
+    // List semua transaksi
+Route::get('/transaksi-produk', [transaksiProdukController::class, 'index'])->name('transaksi-produk.index');
+    Route::get('/transaksi-produk/create', [transaksiProdukController::class, 'create'])->name('transaksi-produk.create');
+    Route::get('/transaksi-produk/{id}', [transaksiProdukController::class, 'show'])->name('transaksi-produk.show');
+    Route::get('/transaksi-produk/{id}/edit', [transaksiProdukController::class, 'edit'])->name('transaksi-produk.edit');
+    Route::put('/transaksi-produk/{id}', [transaksiProdukController::class, 'update'])->name('transaksi-produk.update');
+    Route::delete('/transaksi-produk/{id}', [transaksiProdukController::class, 'destroy'])->name('transaksi-produk.destroy');
 });

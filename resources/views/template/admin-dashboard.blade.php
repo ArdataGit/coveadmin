@@ -253,6 +253,8 @@
                                                 <li><a href="{{ url('dashboard/master-lantai') }}">Lantai</a></li>
                                                 <li><a href="{{ url('dashboard/master-lokasi') }}">Lokasi</a></li>
                                                 <li><a href="{{ url('dashboard/master-tipe-kos') }}">Tipe Kamar</a></li>
+                                                <li><a href="{{ url('dashboard/produk') }}">Produk</a></li>
+                                                <li><a href="{{ url('dashboard/kategori') }}">Kategori</a></li>
                                             </ul>
                                         </li>
                                         <li style="list-style: none;">
@@ -303,6 +305,18 @@
                                                     <polyline points="12 6 12 12 16 14"></polyline>
                                                 </svg>
                                                 Transaksi
+                                            </a>
+                                        </li>
+                                        <li style="list-style: none;">
+                                            <a href="{{ url('/dashboard/transaksi-produk') }}">
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" 
+                                                    viewBox="0 0 24 24" fill="none" stroke="currentColor" 
+                                                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round" 
+                                                    class="feather feather-clock">
+                                                    <circle cx="12" cy="12" r="10"></circle>
+                                                    <polyline points="12 6 12 12 16 14"></polyline>
+                                                </svg>
+                                                Transaksi Produk
                                             </a>
                                         </li>
                                         <li style="list-style: none;">
