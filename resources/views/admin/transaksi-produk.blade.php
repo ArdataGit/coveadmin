@@ -52,7 +52,7 @@
             <tbody id="transaksi-table-body">
                 @forelse ($transaksi as $item)
                     <tr>
-                        <td>{{ $item->id_transaksi }}</td>
+                        <td>{{ $loop->iteration }}</td>
                         <td>{{ $item->no_order }}</td>
                         <td>{{ $item->user->nama ?? '-' }}</td>
                         <td>{{ $item->produk->judul_produk ?? '-' }}</td>
@@ -319,7 +319,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 data.data.forEach((item, index) => {
                     tbody.innerHTML += `
                         <tr>
-                            <td>${item.id_transaksi}</td>
+                            <td>${index + 1}</td>
                             <td>${item.no_order}</td>
                             <td>${item.user?.nama ?? '-'}</td>
                             <td>${item.produk?.judul_produk ?? '-'}</td>
