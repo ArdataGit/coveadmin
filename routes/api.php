@@ -28,10 +28,12 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 // ==================== TRANSAKSI PRODUK ====================
 Route::get('/transaksi-produk/user/{userId}', [transaksiProdukController::class, 'getByUserProduk'])->name('transaksi-produk.getByUser');
 Route::post('/transaksi-produk', [transaksiProdukController::class, 'store'])->name('transaksi-produk.store');
+Route::post('/transaksi-produkweb', [transaksiProdukController::class, 'storeweb'])->name('transaksi-produkweb.store');
 
 
 // ==================== TRANSAKSI ====================
 Route::post('/transaksi', [transaksiController::class, 'store']);
+Route::post('/transaksiweb', [transaksiController::class, 'storeweb']);
 Route::get('/transaksi/user/{userId}', [transaksiController::class, 'getByUser'])->name('transaksi.getByUser');
 Route::get('/transaksi/{id}/invoice', [transaksiController::class, 'invoice'])->name('transaksi.invoice');
 

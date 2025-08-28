@@ -109,7 +109,7 @@
     <div class="modal fade" id="tambahTransaksiModal" tabindex="-1">
         <div class="modal-dialog">
             <div class="modal-content">
-                <form method="POST" action="{{ url('api/transaksi') }}">
+                <form method="POST" action="{{ url('api/transaksiweb') }}">
                     @csrf
                     <div class="modal-header"><h5>Tambah Transaksi</h5></div>
                     <div class="modal-body">

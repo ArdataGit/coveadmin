@@ -57,7 +57,7 @@ class transaksiController extends Controller
     /**
      * Membuat transaksi baru
      */
-    public function store(Request $request)
+    public function storeweb(Request $request)
     {
         $request->validate([
             'user_id'           => 'required|exists:users,id',
@@ -88,6 +88,41 @@ class transaksiController extends Controller
         return redirect()->route('transaksi.index')
             ->with('success', 'Transaksi berhasil dibuat');
     }
+  
+  public function store(Request $request)
+{
+    $request->validate([
+        'user_id'           => 'required|exists:users,id',
+        'kos_id'            => 'required|exists:kos,id',
+        'kamar_id'          => 'required|exists:kos_detail,id',
+        'paket_id'          => 'required|exists:paket_harga,id',
+        'tanggal'           => 'required|date',
+        'harga'             => 'required|integer|min:0',
+        'quantity'          => 'nullable|integer|min:1',
+        'start_order_date'  => 'nullable|date',
+        'end_order_date'    => 'nullable|date|after_or_equal:start_order_date',
+    ]);
+
+    $transaksi = Transaksi::create([
+        'user_id'            => $request->user_id,
+        'no_order'           => 'INV/' . strtoupper(Str::random(8)),
+        'tanggal'            => $request->tanggal,
+        'start_order_date'   => $request->start_order_date,
+        'end_order_date'     => $request->end_order_date,
+        'kos_id'             => $request->kos_id,
+        'kamar_id'           => $request->kamar_id,
+        'paket_id'           => $request->paket_id,
+        'harga'              => $request->harga,
+        'quantity'           => $request->quantity ?? 1,
+        'status'             => 'pending',
+    ]);
+
+    return response()->json([
+        'success'   => true,
+        'message'   => 'Transaksi berhasil dibuat',
+        'data'      => $transaksi
+    ], 201);
+}
 
     /**
      * Update status transaksi

@@ -25,7 +25,7 @@ class userController extends Controller
             'email'    => 'required|email',
             'password' => 'required'
         ]);
-
+      
         if (!Auth::attempt($credentials)) {
             return response()->json([
                 'success' => false,

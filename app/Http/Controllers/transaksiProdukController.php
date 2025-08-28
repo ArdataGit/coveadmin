@@ -26,7 +26,7 @@ class transaksiProdukController extends Controller
     }
 
 // Simpan transaksi baru
-public function store(Request $request)
+public function storeweb(Request $request)
 {
     $request->validate([
         'id_user' => 'required|exists:users,id',
@@ -55,6 +55,41 @@ public function store(Request $request)
 
     return redirect()->route('transaksi-produk.index')
                      ->with('success', 'Transaksi berhasil ditambahkan');
+}
+
+  
+  public function store(Request $request)
+{
+    $request->validate([
+        'id_user' => 'required|exists:users,id',
+        'id_produk' => 'required|exists:produk,id_produk',
+        'jumlah' => 'required|integer|min:1',
+        'harga_satuan' => 'required|numeric|min:0',
+        'subtotal' => 'required|numeric|min:0',
+        'tanggal_transaksi' => 'required|date',
+        'status' => 'required|in:belum_lunas,lunas,dibatalkan',
+    ]);
+
+    $last = TransaksiProduk::latest('id_transaksi')->first();
+    $nextId = $last ? $last->id_transaksi + 1 : 1;
+    $no_order = 'PRDK-' . now()->format('Ymd') . '-' . str_pad($nextId, 4, '0', STR_PAD_LEFT);
+
+    $transaksi = TransaksiProduk::create([
+        'no_order' => $no_order,
+        'id_user' => $request->id_user,
+        'id_produk' => $request->id_produk,
+        'jumlah' => $request->jumlah,
+        'harga_satuan' => $request->harga_satuan,
+        'subtotal' => $request->subtotal,
+        'tanggal_transaksi' => $request->tanggal_transaksi,
+        'status' => $request->status,
+    ]);
+
+    return response()->json([
+        'success' => true,
+        'message' => 'Transaksi berhasil ditambahkan',
+        'data' => $transaksi
+    ], 201);
 }
 
 

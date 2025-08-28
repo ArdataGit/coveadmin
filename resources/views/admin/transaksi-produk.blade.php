@@ -96,7 +96,7 @@
     <div class="modal fade" id="addTransaksiModal" tabindex="-1" aria-labelledby="addTransaksiModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-lg">
             <div class="modal-content">
-                <form action="{{ route('transaksi-produk.store') }}" method="POST">
+                <form action="{{ route('transaksi-produkweb.store') }}" method="POST">
                     @csrf
                     <div class="modal-header">
                         <h5 class="modal-title" id="addTransaksiModalLabel">Tambah Transaksi</h5>
