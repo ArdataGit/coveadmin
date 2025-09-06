@@ -82,10 +82,10 @@ Route::prefix('dashboard')->middleware('auth:admin')->group(function () {
     Route::delete('/kos-detail/{id}', [kosController::class, 'detailDestroy'])->name('kos.detail.destroy');
 
     // Placeholder for Gallery route
-    Route::get('/dashboard/kos/{kos_id}/gallery/{kamar_id}', [kosController::class, 'gallery'])->name('kos.gallery');
-    Route::get('/dashboard/kos/{kos_id}/gallery/{kamar_id}/data', [kosController::class, 'galleryData'])->name('kos.gallery.data');
-    Route::post('/dashboard/kos/{kos_id}/gallery/{kamar_id}', [kosController::class, 'galleryStore'])->name('kos.gallery.store');
-    Route::delete('/dashboard/kos/{kos_id}/gallery/{kamar_id}/{id}', [kosController::class, 'galleryDestroy'])->name('kos.gallery.destroy');
+    Route::get('/kos/{kos_id}/gallery/{kamar_id}', [kosController::class, 'gallery'])->name('kos.gallery');
+    Route::get('/kos/{kos_id}/gallery/{kamar_id}/data', [kosController::class, 'galleryData'])->name('kos.gallery.data');
+    Route::post('/kos/{kos_id}/gallery/{kamar_id}', [kosController::class, 'galleryStore'])->name('kos.gallery.store');
+    Route::delete('/kos/{kos_id}/gallery/{kamar_id}/{id}', [kosController::class, 'galleryDestroy'])->name('kos.gallery.destroy');
 
     // Paket Harga Routes
     Route::get('/master-paket-harga', [paketHargaController::class, 'index'])->name('paket-harga.index');

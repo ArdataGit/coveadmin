@@ -8,6 +8,7 @@ use App\Http\Controllers\fasilitasController;
 use App\Http\Controllers\kosController;
 use App\Http\Controllers\lantaiController;
 use App\Http\Controllers\lokasiController;
+use App\Http\Controllers\produkController;
 use App\Http\Controllers\ticketController;
 use App\Http\Controllers\tipeKosController;
 use App\Http\Controllers\transaksiController;
@@ -43,7 +44,11 @@ Route::get('/getLantai', [lantaiController::class, 'getAll']);
 Route::get('/getLokasi', [lokasiController::class, 'getAll']);
 Route::get('/getTipekos', [tipeKosController::class, 'getAll']);
 Route::get('/getKos', [kosController::class, 'getAllData']);
+Route::get('/getProduk', [produkController::class, 'getAllData']);
+
+Route::get('/getKos/{id}', [kosController::class, 'getKosById']);
+Route::get('/getKamar/{kos_id}/kamar/{kamar_id}', [kosController::class, 'getKamarDetail']);
 
 // ==================== TICKET ====================
-Route::get('/tickets/user', [ticketController::class, 'getTicketsByUser'])->name('tickets.user');
+Route::get('/tickets/user', [ticketController::class, 'getTicketsByUserJson'])->name('tickets.user');
 Route::post('/tickets', [ticketController::class, 'store'])->name('tickets.store');

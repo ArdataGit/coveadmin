@@ -318,175 +318,183 @@ class kosController extends Controller
         ]);
     }
 
-    /**
-     * Get all kos data with advanced search
-     */
     public function getAllData(Request $request)
-    {
-        $search      = $request->query('search');
-        $tipe        = $request->query('tipe');
-        $daerah      = $request->query('daerah');
-        $jenis       = $request->query('jenis');
-        $nama_kamar  = $request->query('nama_kamar');
-        $nama_kos    = $request->query('nama_kos');
-        $start_date  = $request->query('start_date');
-        $end_date    = $request->query('end_date');
-        $perPage     = $request->query('per_page', 10);
+{
+    $search      = $request->query('search');
+    $tipe        = $request->query('tipe');
+    $daerah      = $request->query('daerah');
+    $jenis       = $request->query('jenis');
+    $nama_kamar  = $request->query('nama_kamar');
+    $nama_kos    = $request->query('nama_kos');
+    $start_date  = $request->query('start_date');
+    $end_date    = $request->query('end_date');
+    $perPage     = $request->query('per_page', 10);
 
-        \Log::info('=== getAllData Request Params ===', [
-            'search'     => $search,
-            'tipe'       => $tipe,
-            'daerah'     => $daerah,
-            'jenis'      => $jenis,
-            'nama_kamar' => $nama_kamar,
-            'nama_kos'   => $nama_kos,
-            'start_date' => $start_date,
-            'end_date'   => $end_date,
-            'per_page'   => $perPage
-        ]);
+    \Log::info('=== getAllData Request Params ===', [
+        'search'     => $search,
+        'tipe'       => $tipe,
+        'daerah'     => $daerah,
+        'jenis'      => $jenis,
+        'nama_kamar' => $nama_kamar,
+        'nama_kos'   => $nama_kos,
+        'start_date' => $start_date,
+        'end_date'   => $end_date,
+        'per_page'   => $perPage
+    ]);
 
-        $query = KosDetail::with(['kos.daerah', 'tipeKos', 'lantai', 'paketHarga'])
-            ->orderBy('id', 'desc');
+    $query = KosDetail::with(['kos.daerah', 'tipeKos', 'lantai', 'paketHarga', 'gallery'])
+        ->orderBy('id', 'desc');
 
-        if ($search) {
-            $query->where(function ($q) use ($search) {
-                $q->where('nama', 'like', "%{$search}%")
-                  ->orWhere('jenis_kos', 'like', "%{$search}%")
-                  ->orWhereHas('kos', function ($q2) use ($search) {
-                      $q2->where('nama', 'like', "%{$search}%")
-                          ->orWhere('alamat_kota', 'like', "%{$search}%")
-                          ->orWhereHas('daerah', function ($q3) use ($search) {
-                              $q3->where('nama', 'like', "%{$search}%");
-                          });
-                  })
-                  ->orWhereHas('tipeKos', function ($q4) use ($search) {
-                      $q4->where('nama', 'like', "%{$search}%");
-                  });
-            });
+    if ($search) {
+        $query->where(function ($q) use ($search) {
+            $q->where('nama', 'like', "%{$search}%")
+              ->orWhere('jenis_kos', 'like', "%{$search}%")
+              ->orWhereHas('kos', function ($q2) use ($search) {
+                  $q2->where('nama', 'like', "%{$search}%")
+                      ->orWhere('alamat_kota', 'like', "%{$search}%")
+                      ->orWhereHas('daerah', function ($q3) use ($search) {
+                          $q3->where('nama', 'like', "%{$search}%");
+                      });
+              })
+              ->orWhereHas('tipeKos', function ($q4) use ($search) {
+                  $q4->where('nama', 'like', "%{$search}%");
+              });
+        });
+    }
+
+    if ($tipe)   $query->whereHas('tipeKos', fn($q) => $q->where('nama', 'like', "%{$tipe}%"));
+    if ($daerah) $query->whereHas('kos.daerah', fn($q) => $q->where('nama', 'like', "%{$daerah}%"));
+    if ($jenis)  $query->where('jenis_kos', 'like', "%{$jenis}%");
+    if ($nama_kamar) $query->where('nama', 'like', "%{$nama_kamar}%");
+    if ($nama_kos)   $query->whereHas('kos', fn($q) => $q->where('nama', 'like', "%{$nama_kos}%"));
+
+    if ($start_date && $end_date) {
+        try {
+            $startDate = Carbon::parse($start_date)->toDateString();
+            $endDate = Carbon::parse($end_date)->toDateString();
+
+            \Log::info('Tanggal filter ter-parse', [
+                'startDate' => $startDate,
+                'endDate' => $endDate
+            ]);
+
+        } catch (\Exception $e) {
+            \Log::error('Error parsing tanggal', ['error' => $e->getMessage()]);
+            return response()->json([
+                'success' => false,
+                'message' => 'Invalid start_date or end_date format',
+            ], 400);
         }
+    }
 
-        if ($tipe)   $query->whereHas('tipeKos', fn($q) => $q->where('nama', 'like', "%{$tipe}%"));
-        if ($daerah) $query->whereHas('kos.daerah', fn($q) => $q->where('nama', 'like', "%{$daerah}%"));
-        if ($jenis)  $query->where('jenis_kos', 'like', "%{$jenis}%");
-        if ($nama_kamar) $query->where('nama', 'like', "%{$nama_kamar}%");
-        if ($nama_kos)   $query->whereHas('kos', fn($q) => $q->where('nama', 'like', "%{$nama_kos}%"));
+    $result = $query->paginate($perPage);
+    \Log::info('Jumlah data setelah filter availability (query SQL)', ['count' => $result->total()]);
 
-        if ($start_date && $end_date) {
-            try {
-                $startDate = Carbon::parse($start_date)->toDateString();
-                $endDate   = Carbon::parse($end_date)->toDateString();
-
-                \Log::info('Tanggal filter ter-parse', [
-                    'startDate' => $startDate,
-                    'endDate'   => $endDate
+    if ($start_date && $end_date) {
+        $result->setCollection(
+            $result->getCollection()->filter(function ($item) use ($start_date, $end_date) {
+                $availabilityJson = optional($item->paketHarga)->ketersediaan;
+                \Log::info("Periksa ketersediaan untuk ID {$item->id}", [
+                    'ketersediaan' => $availabilityJson
                 ]);
 
-                $query->whereHas('paketHarga', function ($q) use ($startDate, $endDate) {
-                    $q->whereNotNull('ketersediaan')
-                      ->whereRaw('EXISTS (
-                          SELECT 1
-                          FROM JSON_TABLE(
-                              ketersediaan,
-                              "$[*]" COLUMNS (
-                                  start_date DATE PATH "$.start_date",
-                                  end_date DATE PATH "$.end_date"
-                              )
-                          ) AS availability
-                          WHERE availability.start_date <= ? 
-                            AND availability.end_date >= ?
-                      )', [$endDate, $startDate]);
-                });
-
-            } catch (\Exception $e) {
-                \Log::error('Error parsing tanggal', ['error' => $e->getMessage()]);
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Invalid start_date or end_date format',
-                ], 400);
-            }
-        }
-
-        $result = $query->paginate($perPage);
-        \Log::info('Jumlah data setelah filter availability (query SQL)', ['count' => $result->total()]);
-
-        if ($start_date && $end_date) {
-            $result->setCollection(
-                $result->getCollection()->filter(function ($item) use ($start_date, $end_date) {
-                    $availabilityJson = optional($item->paketHarga)->ketersediaan;
-                    \Log::info("Periksa ketersediaan untuk ID {$item->id}", [
-                        'ketersediaan' => $availabilityJson
-                    ]);
-
-                    if (!$availabilityJson) {
-                        \Log::info('❌ Tidak ada ketersediaan');
-                        return false;
-                    }
-
-                    $availabilityArr = json_decode($availabilityJson, true);
-                    if (!is_array($availabilityArr)) {
-                        \Log::info('❌ Format ketersediaan tidak valid JSON array');
-                        return false;
-                    }
-
-                    foreach ($availabilityArr as $periode) {
-                        \Log::info('Cek periode', $periode);
-                        if (
-                            isset($periode['start_date'], $periode['end_date']) &&
-                            $periode['start_date'] <= $end_date &&
-                            $periode['end_date'] >= $start_date
-                        ) {
-                            \Log::info('✅ MATCH periode', $periode);
-                            return true;
-                        }
-                    }
-
-                    \Log::info('❌ Tidak ada periode cocok');
+                if (!$availabilityJson || $availabilityJson === '[]') {
+                    \Log::info('❌ Tidak ada ketersediaan atau kosong');
                     return false;
-                })
-            );
-        }
+                }
 
-        $result->setCollection(
-            $result->getCollection()->map(function ($item) {
-                $paketHarga = $item->paketHarga ? [
-                    'perharian_harga' => $item->paketHarga->perharian_harga ?? null,
-                    'perbulan_harga' => $item->paketHarga->perbulan_harga ?? null,
-                    'pertigabulan_harga' => $item->paketHarga->pertigabulan_harga ?? null,
-                    'perenambulan_harga' => $item->paketHarga->perenambulan_harga ?? null,
-                    'pertahun_harga' => $item->paketHarga->pertahun_harga ?? null,
-                    'ketersediaan' => $item->paketHarga->ketersediaan ?? [],
-                ] : null;
+                $availabilityArr = json_decode($availabilityJson, true);
+                if (!is_array($availabilityArr)) {
+                    \Log::info('❌ Format ketersediaan tidak valid JSON array');
+                    return false;
+                }
 
-                return [
-                    'id'          => $item->id,
-                    'nama_kamar'  => $item->nama,
-                    'jenis_kos'   => $item->jenis_kos,
-                    'nama_kos'    => $item->kos->nama ?? null,
-                    'lokasi_kos'  => $item->kos->daerah->nama ?? null,
-                    'tipe_kos'    => $item->tipeKos->nama ?? null,
-                    'lantai'      => $item->lantai->nama ?? null,
-                    'fasilitas'   => $item->fasilitas_ids ?? [],
-                    'created_at'  => $item->created_at->format('d M Y H:i'),
-                    'paket_harga' => $paketHarga,
-                ];
+                foreach ($availabilityArr as $periode) {
+                    \Log::info('Cek periode', $periode);
+                    if (
+                        isset($periode['start_date'], $periode['end_date']) &&
+                        $periode['start_date'] <= $end_date &&
+                        $periode['end_date'] >= $start_date
+                    ) {
+                        \Log::info('✅ MATCH periode', $periode);
+                        return true;
+                    }
+                }
+
+                \Log::info('❌ Tidak ada periode cocok');
+                return false;
             })
         );
-
-        \Log::info('Jumlah data final setelah semua filter', ['count' => $result->count()]);
-
-        return response()->json([
-            'success' => true,
-            'data'    => $result->items(),
-            'meta'    => [
-                'current_page' => $result->currentPage(),
-                'last_page'    => $result->lastPage(),
-                'per_page'     => $result->perPage(),
-                'total'        => $result->total(),
-                'from'         => $result->firstItem(),
-                'to'           => $result->lastItem(),
-            ]
-        ]);
     }
+
+    // Fetch all fasilitas records to avoid N+1 queries
+    $fasilitasIds = $result->getCollection()
+        ->pluck('fasilitas_ids')
+        ->filter()
+        ->map(function ($ids) {
+            return json_decode($ids, true) ?? [];
+        })
+        ->flatten()
+        ->unique()
+        ->toArray();
+
+    $fasilitasData = Fasilitas::whereIn('id', $fasilitasIds)->get()->keyBy('id');
+
+    $result->setCollection(
+        $result->getCollection()->map(function ($item) use ($fasilitasData) {
+            $paketHarga = $item->paketHarga ? [
+              	'paket_id' => $item->paketHarga->id ?? null,
+                'perharian_harga' => $item->paketHarga->perharian_harga ?? null,
+                'perbulan_harga' => $item->paketHarga->perbulan_harga ?? null,
+                'pertigabulan_harga' => $item->paketHarga->pertigabulan_harga ?? null,
+                'perenambulan_harga' => $item->paketHarga->perenambulan_harga ?? null,
+                'pertahun_harga' => $item->paketHarga->pertahun_harga ?? null,
+                'ketersediaan'       => is_string($item->paketHarga->ketersediaan)
+                        ? json_decode($item->paketHarga->ketersediaan, true)
+                        : ($item->paketHarga->ketersediaan ?? []),   
+            ] : null;
+
+            // Map fasilitas data from fasilitas_ids
+            $fasilitasIds = json_decode($item->fasilitas_ids, true) ?? [];
+            $fasilitas = collect($fasilitasIds)->map(function ($id) use ($fasilitasData) {
+                $fasilitasItem = $fasilitasData->get($id);
+                return $fasilitasItem ? [
+                    'id' => $fasilitasItem->id,
+                    'nama' => $fasilitasItem->nama,
+                ] : null;
+            })->filter()->toArray();
+
+            return [
+                'id'          => $item->id,
+                'nama_kamar'  => $item->nama,
+                'jenis_kos'   => $item->jenis_kos,
+              	'kos'		  => $item->kos,
+                'lokasi_kos'  => $item->kos->daerah->nama ?? null,
+                'tipe_kos'    => $item->tipeKos->nama ?? null,
+                'lantai'      => $item->lantai->nama ?? null,
+                'fasilitas'   => $fasilitas, // Include full fasilitas data
+                'created_at'  => $item->created_at->format('d M Y H:i'),
+                'paket_harga' => $paketHarga,
+                'gallery' => $item->gallery,
+            ];
+        })
+    );
+
+    \Log::info('Jumlah data final setelah semua filter', ['count' => $result->count()]);
+
+    return response()->json([
+        'success' => true,
+        'data'    => $result->items(),
+        'meta'    => [
+            'current_page' => $result->currentPage(),
+            'last_page'    => $result->lastPage(),
+            'per_page'     => $result->perPage(),
+            'total'        => $result->total(),
+            'from'         => $result->firstItem(),
+            'to'           => $result->lastItem(),
+        ]
+    ]);
+}
 
    /**
      * Fetch KosDetail by kos_id for dropdown
@@ -517,4 +525,119 @@ class kosController extends Controller
             'data' => $paketHarga
         ]);
     }
+  
+      /**
+     * API - Get kos by ID with details (kamar list).
+     */
+    public function getKosById($kos_id)
+    {
+        $kos = Kos::with('daerah')->find($kos_id);
+
+        if (!$kos) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Kos not found'
+            ], 404);
+        }
+
+        // Ambil semua kamar (KosDetail) berdasarkan kos_id
+        $details = KosDetail::with(['tipeKos', 'lantai', 'paketHarga', 'gallery'])
+            ->where('kos_id', $kos_id)
+            ->get()
+            ->map(function ($item) {
+                $fasilitasIds = json_decode($item->fasilitas_ids, true) ?? [];
+                $fasilitas = Fasilitas::whereIn('id', $fasilitasIds)
+                    ->get(['id', 'nama']);
+
+                return [
+                    'id'          => $item->id,
+                    'nama_kamar'  => $item->nama,
+                    'jenis_kos'   => $item->jenis_kos,
+                    'deskripsi'   => $item->deskripsi,
+                    'tipe_sewa'   => $item->tipe_sewa,
+                    'tipe_kos'    => $item->tipeKos->nama ?? null,
+                    'lantai'      => $item->lantai->nama ?? null,
+                    'fasilitas'   => $fasilitas,
+                    'paket_harga' => $item->paketHarga ? [
+                    'perharian_harga'    => $item->paketHarga->perharian_harga,
+                    'perbulan_harga'     => $item->paketHarga->perbulan_harga,
+                    'pertigabulan_harga' => $item->paketHarga->pertigabulan_harga,
+                    'perenambulan_harga' => $item->paketHarga->perenambulan_harga,
+                    'pertahun_harga'     => $item->paketHarga->pertahun_harga,
+                    'ketersediaan'       => is_string($item->paketHarga->ketersediaan)
+                        ? json_decode($item->paketHarga->ketersediaan, true)
+                        : ($item->paketHarga->ketersediaan ?? []),
+                ] : null,
+                    'gallery'     => $item->gallery,
+                ];
+            });
+
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'id'        => $kos->id,
+                'nama'      => $kos->nama,
+                'alamat'    => $kos->alamat_kota,
+                'daerah'    => $kos->daerah->nama ?? null,
+                'keterangan'=> $kos->keterangan,
+                'link_maps' => $kos->link_maps,
+                'created_at'=> $kos->created_at->format('d M Y H:i'),
+                'kamar'     => $details
+            ]
+        ]);
+    }
+
+    /**
+     * API - Get kamar detail by kos_id and kamar_id.
+     */
+    public function getKamarDetail($kos_id, $kamar_id)
+    {
+        $kamar = KosDetail::with(['tipeKos', 'lantai', 'paketHarga', 'gallery', 'kos.daerah'])
+            ->where('kos_id', $kos_id)
+            ->where('id', $kamar_id)
+            ->first();
+
+        if (!$kamar) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Kamar not found'
+            ], 404);
+        }
+
+        $fasilitasIds = json_decode($kamar->fasilitas_ids, true) ?? [];
+        $fasilitas = Fasilitas::whereIn('id', $fasilitasIds)->get(['id','nama']);
+
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'id'          => $kamar->id,
+                'nama_kamar'  => $kamar->nama,
+                'jenis_kos'   => $kamar->jenis_kos,
+                'deskripsi'   => $kamar->deskripsi,
+                'tipe_sewa'   => $kamar->tipe_sewa,
+                'tipe_kos'    => $kamar->tipeKos->nama ?? null,
+                'lantai'      => $kamar->lantai->nama ?? null,
+                'kos'         => [
+                    'id'     => $kamar->kos->id ?? null,
+                    'nama'   => $kamar->kos->nama ?? null,
+					'link_maps'   => $kamar->kos->link_maps ?? null,
+                    'daerah' => $kamar->kos->daerah->nama ?? null,
+                ],
+                'fasilitas'   => $fasilitas,
+                'paket_harga' => $kamar->paketHarga ? [
+                'paket_id'    => $kamar->paketHarga->id,
+                'perharian_harga'    => $kamar->paketHarga->perharian_harga,
+                'perbulan_harga'     => $kamar->paketHarga->perbulan_harga,
+                'pertigabulan_harga' => $kamar->paketHarga->pertigabulan_harga,
+                'perenambulan_harga' => $kamar->paketHarga->perenambulan_harga,
+                'pertahun_harga'     => $kamar->paketHarga->pertahun_harga,
+                'ketersediaan'       => is_string($kamar->paketHarga->ketersediaan)
+                    ? json_decode($kamar->paketHarga->ketersediaan, true)
+                    : ($kamar->paketHarga->ketersediaan ?? []),
+            ] : null,
+                'gallery'     => $kamar->gallery,
+            ]
+        ]);
+    }
+  
 }

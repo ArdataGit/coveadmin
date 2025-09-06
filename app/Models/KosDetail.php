@@ -52,4 +52,9 @@ class KosDetail extends Model
     {
         return $this->hasOne(PaketHarga::class, 'kamar_id');
     }
+  
+    public function fasilitas()
+    {
+        return $this->belongsToMany(Fasilitas::class, 'fasilitas', 'kos_detail_id', 'fasilitas_id');
+    }
 }

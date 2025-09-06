@@ -165,4 +165,14 @@ class ProdukController extends Controller
 
         return redirect()->route('produk.index')->with('success', 'Produk berhasil dihapus');
     }
+  
+  	public function getAllData()
+    {
+        $lokasi = Produk::orderBy('created_at', 'desc')->with('gambar')->get();
+
+        return response()->json([
+            'success' => true,
+            'data'    => $lokasi
+        ]);
+    }
 }

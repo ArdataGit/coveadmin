@@ -533,6 +533,10 @@ document.addEventListener('DOMContentLoaded', function() {
                         data-bs-target="#editKamarModal">
                         <i class="icofont-edit"></i> Edit
                     </button>
+                      <a href="/dashboard/kos/${item.kos_id}/gallery/${item.id}" 
+                         class="btn btn-sm btn-info">
+                          <i class="icofont-image"></i> Gallery
+                      </a>
                     <button class="btn btn-sm btn-danger delete-btn" 
                         data-id="${item.id || ''}" 
                         data-bs-toggle="modal" 

@@ -224,4 +224,25 @@ class ticketController extends Controller
 
         return view('tickets.index', compact('tickets'));
     }
+  
+  /**
+   * Get all tickets by the specified user_id.
+   */
+  public function getTicketsByUserJson(Request $request)
+  {
+      $request->validate([
+          'user_id' => 'required|exists:users,id', // Validasi user_id dari input
+      ]);
+
+      $tickets = Ticket::where('user_id', $request->user_id)->latest()->get();
+
+      return response()->json([
+          'success' => true,
+          'data' => $tickets,
+          'meta' => [
+              'count' => $tickets->count(),
+              'timestamp' => now()->toIso8601String(),
+          ]
+      ]);
+  }
 }

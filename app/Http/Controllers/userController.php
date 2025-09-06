@@ -123,6 +123,7 @@ class userController extends Controller
             'nik' => 'sometimes|numeric|digits:16|unique:users,nik,' . $user->id,
             'email' => 'sometimes|email|unique:users,email,' . $user->id,
             'alamat' => 'sometimes|string',
+            'status' => 'nullable',
             'password' => 'nullable|string|min:8',
             'gambarktp' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
             'fotoselfie' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
@@ -133,7 +134,7 @@ class userController extends Controller
         }
 
         // update data basic
-        $user->fill($request->only('nama', 'nik', 'email', 'alamat'));
+        $user->fill($request->only('nama', 'nik', 'email', 'alamat','status'));
 
         if ($request->filled('password')) {
             $user->password = Hash::make($request->password);
