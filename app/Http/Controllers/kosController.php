@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Gallery;
 use App\Models\Kos;
 use App\Models\KosDetail;
 use App\Models\Lokasi;
@@ -318,6 +319,8 @@ class kosController extends Controller
         ]);
     }
 
+
+
     public function getAllData(Request $request)
 {
     $search      = $request->query('search');
@@ -342,7 +345,7 @@ class kosController extends Controller
         'per_page'   => $perPage
     ]);
 
-    $query = KosDetail::with(['kos.daerah', 'tipeKos', 'lantai', 'paketHarga', 'gallery'])
+    $query = KosDetail::with(['kos.daerah', 'kos.gallery','tipeKos', 'lantai', 'paketHarga', 'gallery'])
         ->orderBy('id', 'desc');
 
     if ($search) {
@@ -592,7 +595,7 @@ class kosController extends Controller
      */
     public function getKamarDetail($kos_id, $kamar_id)
     {
-        $kamar = KosDetail::with(['tipeKos', 'lantai', 'paketHarga', 'gallery', 'kos.daerah'])
+        $kamar = KosDetail::with(['tipeKos', 'lantai', 'paketHarga', 'gallery', 'kos.daerah', 'kos.gallery'])
             ->where('kos_id', $kos_id)
             ->where('id', $kamar_id)
             ->first();

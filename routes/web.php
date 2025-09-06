@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AdminAuthController;
+use App\Http\Controllers\GalleryController;
 use App\Http\Controllers\kategoriController;
 use App\Http\Controllers\kosController;
 use App\Http\Controllers\lantaiController;
@@ -86,6 +87,12 @@ Route::prefix('dashboard')->middleware('auth:admin')->group(function () {
     Route::get('/kos/{kos_id}/gallery/{kamar_id}/data', [kosController::class, 'galleryData'])->name('kos.gallery.data');
     Route::post('/kos/{kos_id}/gallery/{kamar_id}', [kosController::class, 'galleryStore'])->name('kos.gallery.store');
     Route::delete('/kos/{kos_id}/gallery/{kamar_id}/{id}', [kosController::class, 'galleryDestroy'])->name('kos.gallery.destroy');
+
+    // Placeholder for Gallery route
+    Route::get('/master-kos/{kos_id}/gallery', [GalleryController::class, 'gallerykos'])->name('kos.gallerykos');
+    Route::get('/master-kos/{kos_id}/gallery/data', [GalleryController::class, 'galleryKosData'])->name('gallerykos.data');
+    Route::post('/master-kos/{kos_id}/gallery', [GalleryController::class, 'galleryKosStore'])->name('kos.gallerykos.store');
+    Route::delete('/master-kos/{kos_id}/gallery/{id}', [GalleryController::class, 'galleryKosDestroy'])->name('kos.gallerykos.destroy');
 
     // Paket Harga Routes
     Route::get('/master-paket-harga', [paketHargaController::class, 'index'])->name('paket-harga.index');

@@ -2,10 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use App\Mail\TransaksiProductCreatedMail;
 use App\Models\Produk;
 use App\Models\TransaksiProduk;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Mail;
 
 class transaksiProdukController extends Controller
 {
@@ -84,6 +86,9 @@ public function storeweb(Request $request)
         'tanggal_transaksi' => $request->tanggal_transaksi,
         'status' => $request->status,
     ]);
+
+    
+    Mail::to($transaksi->user->email)->send(new TransaksiProductCreatedMail($transaksi));
 
     return response()->json([
         'success' => true,

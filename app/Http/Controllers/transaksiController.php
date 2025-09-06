@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Mail\TransaksiCreatedMail;
 use App\Models\Kos;
 use App\Models\KosDetail;
 use App\Models\PaketHarga;
@@ -9,6 +10,7 @@ use App\Models\Transaksi;
 use App\Models\Pembayaran;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 use PDF;
 
@@ -116,6 +118,9 @@ class transaksiController extends Controller
         'quantity'           => $request->quantity ?? 1,
         'status'             => 'pending',
     ]);
+
+    // kirim email
+    Mail::to($transaksi->user->email)->send(new TransaksiCreatedMail($transaksi));
 
     return response()->json([
         'success'   => true,

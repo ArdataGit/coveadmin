@@ -2,9 +2,13 @@
 
 namespace App\Http\Controllers;
 
+use App\Mail\TicketCreatedMail;
+use App\Mail\TicketRespondedMail;
+use App\Mail\TicketUpdatedMail;
 use App\Models\Ticket;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 
@@ -73,6 +77,7 @@ class ticketController extends Controller
             // Create the ticket
             $ticket = Ticket::create($ticketData);
 
+            Mail::to($ticket->user->email)->send(new TicketCreatedMail($ticket));
             // Move the image to a user-specific directory
             if ($request->hasFile('image') && $request->file('image')->isValid()) {
                 $file = $request->file('image');
@@ -137,6 +142,9 @@ class ticketController extends Controller
 
         $ticket->update($ticketData);
 
+        
+        Mail::to($ticket->user->email)->send(new TicketUpdatedMail($ticket));
+
         return redirect()->route('tickets.index')->with('success', 'Tiket pengaduan berhasil diperbarui!');
     }
 
@@ -198,6 +206,9 @@ class ticketController extends Controller
                 'admin_response' => $request->admin_response,
                 'status' => $request->status,
             ]);
+
+            
+            Mail::to($ticket->user->email)->send(new TicketRespondedMail($ticket));
 
             return response()->json([
                 'success' => true,

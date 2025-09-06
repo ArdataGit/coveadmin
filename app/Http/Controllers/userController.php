@@ -2,9 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use App\Mail\WelcomeEmail;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Hash;
 
@@ -81,30 +83,31 @@ class userController extends Controller
         $data['password'] = Hash::make($request->password);
 
         try {
-            // // upload files
+            $user = User::create($data);
+
+            // Send welcome email
+            Mail::to($user->email)->send(new WelcomeEmail($user));
+
+            // // Uncomment if file uploads are needed
             // $ktpFilename = time() . '_' . $request->file('gambarktp')->getClientOriginalName();
             // $selfieFilename = time() . '_' . $request->file('fotoselfie')->getClientOriginalName();
-
-            $user = User::create(array_merge($data));
-
-            // // simpan file KTP
+            //
             // $ktpPath = public_path("img/user/{$user->id}/gambarktp");
             // if (!file_exists($ktpPath)) mkdir($ktpPath, 0755, true);
             // $request->file('gambarktp')->move($ktpPath, $ktpFilename);
-
-            // // simpan file selfie
+            //
             // $selfiePath = public_path("img/user/{$user->id}/fotoselfie");
             // if (!file_exists($selfiePath)) mkdir($selfiePath, 0755, true);
             // $request->file('fotoselfie')->move($selfiePath, $selfieFilename);
-
-            // // otomatis login setelah register
+            //
+            // // Uncomment if token generation is needed
             // $token = $user->createToken('auth_token')->plainTextToken;
 
             return response()->json([
                 'success' => true,
                 'message' => 'Register berhasil',
-                'user'    => $user,
-                // 'token'   => $token
+                'user' => $user,
+                // 'token' => $token
             ]);
         } catch (\Exception $e) {
             return response()->json(['success' => false, 'message' => 'Failed to register: ' . $e->getMessage()], 500);
@@ -299,93 +302,88 @@ class userController extends Controller
     }
 
     public function update(Request $request, $id)
-    {
-        $validator = Validator::make($request->all(), [
-            'nama' => 'required|string|max:255',
-            'nik' => 'required|numeric|digits:16|unique:users,nik,' . $id,
-            'email' => 'required|email|unique:users,email,' . $id,
-            'alamat' => 'required|string',
-            'status' => 'required|in:active,inactive',
-            'gambarktp' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
-            'fotoselfie' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
-        ], [
-            'nik.digits' => 'The NIK must be exactly 16 digits.',
-            'nik.numeric' => 'The NIK must contain only numbers.',
-            'nik.unique' => 'The NIK has already been taken.',
-        ]);
+{
+    \Log::info('Update request received for user ID: ' . $id, ['request_data' => $request->all()]);
 
-        if ($validator->fails()) {
-            return response()->json(['success' => false, 'message' => $validator->errors()->first()], 422);
-        }
+    $validator = Validator::make($request->all(), [
+        'nama' => 'required|string|max:255',
+        'nik' => 'required|numeric|digits:16|unique:users,nik,' . $id,
+        'email' => 'required|email|unique:users,email,' . $id,
+        'alamat' => 'required|string',
+        'status' => 'required|in:active,inactive',
+        'password' => 'nullable|string|min:8',
+        'gambarktp' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
+        'fotoselfie' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
+    ], [
+        'nik.digits' => 'The NIK must be exactly 16 digits.',
+        'nik.numeric' => 'The NIK must contain only numbers.',
+        'nik.unique' => 'The NIK has already been taken.',
+        'password.min' => 'The password must be at least 8 characters.',
+    ]);
 
-        $user = User::findOrFail($id);
-        $user->update($request->only('nama', 'nik', 'email', 'alamat', 'status'));
-
-        if ($request->hasFile('gambarktp')) {
-            // Delete old file
-            if ($user->gambarktp) {
-                $oldFilePath = public_path("img/user/{$user->id}/gambarktp/{$user->gambarktp}");
-                if (file_exists($oldFilePath)) {
-                    unlink($oldFilePath);
-                }
-            }
-            
-            $file = $request->file('gambarktp');
-            $filename = time() . '_' . $file->getClientOriginalName();
-            $destinationPath = public_path("img/user/{$user->id}/gambarktp");
-
-            if (!file_exists($destinationPath)) {
-                mkdir($destinationPath, 0755, true);
-            }
-
-            $file->move($destinationPath, $filename);
-            $user->gambarktp = $filename;
-        }
-
-        if ($request->hasFile('gambarktp') && $request->file('gambarktp')->isValid()) {
-            if ($user->gambarktp) {
-                $oldFilePath = public_path("img/user/{$user->id}/gambarktp/{$user->gambarktp}");
-                if (file_exists($oldFilePath)) {
-                    unlink($oldFilePath);
-                }
-            }
-            
-            $file = $request->file('gambarktp');
-            $filename = time() . '_' . $file->getClientOriginalName();
-            $destinationPath = public_path("img/user/{$user->id}/gambarktp");
-
-            if (!file_exists($destinationPath)) {
-                mkdir($destinationPath, 0755, true);
-            }
-
-            $file->move($destinationPath, $filename);
-            $user->gambarktp = $filename; 
-        }
-
-        if ($request->hasFile('fotoselfie') && $request->file('fotoselfie')->isValid()) {
-            if ($user->fotoselfie) {
-                $oldFilePath = public_path("img/user/{$user->id}/fotoselfie/{$user->fotoselfie}");
-                if (file_exists($oldFilePath)) {
-                    unlink($oldFilePath);
-                }
-            }
-            
-            $file = $request->file('fotoselfie');
-            $filename = time() . '_' . $file->getClientOriginalName();
-            $destinationPath = public_path("img/user/{$user->id}/fotoselfie");
-
-            if (!file_exists($destinationPath)) {
-                mkdir($destinationPath, 0755, true);
-            }
-
-            $file->move($destinationPath, $filename);
-            $user->fotoselfie = $filename; 
-        }
-
-        $user->save();
-
-        return response()->json(['success' => true, 'message' => 'User updated successfully']);
+    if ($validator->fails()) {
+        \Log::warning('Validation failed in update method', ['errors' => $validator->errors()->toArray()]);
+        return response()->json(['success' => false, 'message' => $validator->errors()->first()], 422);
     }
+
+    $user = User::findOrFail($id);
+    \Log::info('User found', ['user_id' => $user->id, 'current_data' => $user->toArray()]);
+
+    $data = $request->only('nama', 'nik', 'email', 'alamat', 'status');
+
+    if ($request->filled('password')) {
+        \Log::info('Password provided, hashing new password', ['password_length' => strlen($request->password)]);
+        $data['password'] = Hash::make($request->password);
+    } else {
+        \Log::info('No password provided, skipping password update');
+    }
+
+    $user->update($data);
+    \Log::info('User updated with basic data', ['updated_data' => $data]);
+
+    if ($request->hasFile('gambarktp') && $request->file('gambarktp')->isValid()) {
+        if ($user->gambarktp) {
+            $oldFilePath = public_path("img/user/{$user->id}/gambarktp/{$user->gambarktp}");
+            if (file_exists($oldFilePath)) {
+                unlink($oldFilePath);
+                \Log::info('Old KTP file deleted', ['path' => $oldFilePath]);
+            }
+        }
+        $file = $request->file('gambarktp');
+        $filename = time() . '_' . $file->getClientOriginalName();
+        $destinationPath = public_path("img/user/{$user->id}/gambarktp");
+        if (!file_exists($destinationPath)) {
+            mkdir($destinationPath, 0755, true);
+        }
+        $file->move($destinationPath, $filename);
+        $user->gambarktp = $filename;
+        \Log::info('New KTP file saved', ['path' => "{$destinationPath}/{$filename}"]);
+    }
+
+    if ($request->hasFile('fotoselfie') && $request->file('fotoselfie')->isValid()) {
+        if ($user->fotoselfie) {
+            $oldFilePath = public_path("img/user/{$user->id}/fotoselfie/{$user->fotoselfie}");
+            if (file_exists($oldFilePath)) {
+                unlink($oldFilePath);
+                \Log::info('Old selfie file deleted', ['path' => $oldFilePath]);
+            }
+        }
+        $file = $request->file('fotoselfie');
+        $filename = time() . '_' . $file->getClientOriginalName();
+        $destinationPath = public_path("img/user/{$user->id}/fotoselfie");
+        if (!file_exists($destinationPath)) {
+            mkdir($destinationPath, 0755, true);
+        }
+        $file->move($destinationPath, $filename);
+        $user->fotoselfie = $filename;
+        \Log::info('New selfie file saved', ['path' => "{$destinationPath}/{$filename}"]);
+    }
+
+    $user->save();
+    \Log::info('User saved successfully', ['final_data' => $user->toArray()]);
+
+    return response()->json(['success' => true, 'message' => 'User updated successfully']);
+}
 
     public function destroy($id)
     {

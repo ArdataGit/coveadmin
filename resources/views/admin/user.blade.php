@@ -26,7 +26,7 @@
                    style="max-width: 300px;" @if($users->isEmpty()) disabled @endif>
         </div>
         <div class="col-6">
-            <button class="btn btn-primary" style="float: inline-end;" data-bs-toggle="modal" data-bs-target="#addUserModal">
+            <button id="addUserButton" class="btn btn-primary" style="float: inline-end;" data-bs-toggle="modal" data-bs-target="#addUserModal">
                 <i class="icofont-plus"></i> Tambah User
             </button>
         </div>
@@ -132,28 +132,13 @@
 
     <!-- Add User Modal -->
     <div class="modal fade" id="addUserModal" tabindex="-1" aria-labelledby="addUserModalLabel" aria-hidden="true">
-        <!-- Success/Error Messages -->
-        <div id="alert-container">
-            @if (session('success'))
-                <div class="alert alert-success alert-dismissible fade show" role="alert">
-                    {{ session('success') }}
-                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                </div>
-            @endif
-            @if (session('error'))
-                <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                    {{ session('error') }}
-                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                </div>
-            @endif
-        </div>
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title" id="addUserModalLabel">Tambah User</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-                <form id="addUserForm" action="{{ route('user.store') }}" method="POST">
+                <form id="addUserForm" action="{{ route('user.store') }}" method="POST" enctype="multipart/form-data">
                     @csrf
                     <div class="modal-body">
                         <div class="mb-3">
@@ -188,11 +173,17 @@
                             <label for="gambarktp" class="form-label">Foto KTP</label>
                             <input type="file" class="form-control" id="gambarktp" name="gambarktp" accept="image/*" required>
                             <div class="form-text">Format: JPG, JPEG, PNG. Max: 2MB</div>
+                            @error('gambarktp')
+                                <small class="text-danger">{{ $message }}</small>
+                            @enderror
                         </div>
                         <div class="mb-3">
                             <label for="fotoselfie" class="form-label">Foto Selfie</label>
                             <input type="file" class="form-control" id="fotoselfie" name="fotoselfie" accept="image/*" required>
                             <div class="form-text">Format: JPG, JPEG, PNG. Max: 2MB</div>
+                            @error('fotoselfie')
+                                <small class="text-danger">{{ $message }}</small>
+                            @enderror
                         </div>
                         <div class="mb-3">
                             <label for="alamat" class="form-label">Alamat</label>
@@ -223,29 +214,13 @@
 
     <!-- Edit User Modal -->
     <div class="modal fade" id="editUserModal" tabindex="-1" aria-labelledby="editUserModalLabel" aria-hidden="true">
-        
-        <!-- Success/Error Messages -->
-        <div id="alert-container">
-            @if (session('success'))
-                <div class="alert alert-success alert-dismissible fade show" role="alert">
-                    {{ session('success') }}
-                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                </div>
-            @endif
-            @if (session('error'))
-                <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                    {{ session('error') }}
-                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                </div>
-            @endif
-        </div>
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title" id="editUserModalLabel">Edit User</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-                <form id="editUserForm" method="POST">
+                <form id="editUserForm" method="POST" enctype="multipart/form-data">
                     @csrf
                     @method('PUT')
                     <input type="hidden" name="id" id="edit_id">
@@ -272,14 +247,27 @@
                             @enderror
                         </div>
                         <div class="mb-3">
+                            <label for="edit_password" class="form-label">Password (optional)</label>
+                            <input type="password" class="form-control" id="edit_password" name="password" placeholder="Enter new password">
+                            @error('password')
+                                <small class="text-danger">{{ $message }}</small>
+                            @enderror
+                        </div>
+                        <div class="mb-3">
                             <label for="edit_gambarktp" class="form-label">Foto KTP</label>
                             <input type="file" class="form-control" id="edit_gambarktp" name="gambarktp" accept="image/*">
                             <div class="form-text">Format: JPG, JPEG, PNG. Max: 2MB</div>
+                            @error('gambarktp')
+                                <small class="text-danger">{{ $message }}</small>
+                            @enderror
                         </div>
                         <div class="mb-3">
                             <label for="edit_fotoselfie" class="form-label">Foto Selfie</label>
                             <input type="file" class="form-control" id="edit_fotoselfie" name="fotoselfie" accept="image/*">
                             <div class="form-text">Format: JPG, JPEG, PNG. Max: 2MB</div>
+                            @error('fotoselfie')
+                                <small class="text-danger">{{ $message }}</small>
+                            @enderror
                         </div>
                         <div class="mb-3">
                             <label for="edit_alamat" class="form-label">Alamat</label>
@@ -363,9 +351,67 @@ document.addEventListener('DOMContentLoaded', function() {
     // Store table data for search filtering
     let tableData = [];
 
+    // Function to close modal and restore scroll
+    function closeModal(modalId) {
+        const modalElement = document.getElementById(modalId);
+        const modal = bootstrap.Modal.getInstance(modalElement) || new bootstrap.Modal(modalElement);
+        
+        // Move focus to the "Tambah User" button before hiding the modal
+        const focusTarget = document.getElementById('addUserButton');
+        if (focusTarget) {
+            focusTarget.focus();
+        }
+
+        modal.hide();
+        
+        // Remove backdrop and restore scroll
+        const backdrop = document.querySelector('.modal-backdrop');
+        if (backdrop) {
+            backdrop.remove();
+        }
+        document.body.classList.remove('modal-open');
+        document.body.style.overflow = ''; // Restore scroll
+    }
+
+    // Handle modal hidden event to ensure focus is managed
+    ['addUserModal', 'editUserModal', 'deleteUserModal', 'imagePreviewModal'].forEach(modalId => {
+        const modalElement = document.getElementById(modalId);
+        modalElement.addEventListener('hidden.bs.modal', () => {
+            // Ensure focus is moved to a safe element after modal is hidden
+            const focusTarget = document.getElementById('addUserButton');
+            if (focusTarget) {
+                focusTarget.focus();
+            }
+            // Additional cleanup for scroll
+            document.body.classList.remove('modal-open');
+            document.body.style.overflow = '';
+        });
+    });
+
+    // Function to show alerts
+    function showAlert(type, message) {
+        const alertContainer = document.getElementById('alert-container');
+        const alert = document.createElement('div');
+        alert.className = `alert alert-${type} alert-dismissible fade show`;
+        alert.setAttribute('role', 'alert');
+        alert.innerHTML = `
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        `;
+        alertContainer.innerHTML = '';
+        alertContainer.appendChild(alert);
+        setTimeout(() => {
+            alert.classList.remove('show');
+            setTimeout(() => alert.remove(), 150);
+        }, 3000);
+    }
+
     // Function to refresh table data
-    function refreshTable() {
-        fetch('{{ route('user.data') }}', {
+    function refreshTable(search = '') {
+        let url = '{{ route('user.data') }}';
+        if (search) url += '?search=' + encodeURIComponent(search);
+
+        fetch(url, {
             headers: {
                 'X-CSRF-TOKEN': csrfToken,
                 'Accept': 'application/json'
@@ -480,24 +526,6 @@ document.addEventListener('DOMContentLoaded', function() {
         filterTable(searchTerm);
     });
 
-    // Function to show alerts
-    function showAlert(type, message) {
-        const alertContainer = document.getElementById('alert-container');
-        const alert = document.createElement('div');
-        alert.className = `alert alert-${type} alert-dismissible fade show`;
-        alert.setAttribute('role', 'alert');
-        alert.innerHTML = `
-            ${message}
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        `;
-        alertContainer.innerHTML = '';
-        alertContainer.appendChild(alert);
-        setTimeout(() => {
-            alert.classList.remove('show');
-            setTimeout(() => alert.remove(), 150);
-        }, 3000);
-    }
-
     // Function to attach event listeners to buttons
     function attachButtonListeners() {
         document.querySelectorAll('.edit-btn').forEach(button => {
@@ -514,6 +542,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 document.getElementById('edit_email').value = email;
                 document.getElementById('edit_alamat').value = alamat;
                 document.getElementById('edit_status').value = status;
+                document.getElementById('edit_password').value = ''; // Clear password field
                 document.getElementById('editUserForm').action = `{{ url('dashboard/master-user') }}/${id}`;
             });
         });
@@ -552,7 +581,7 @@ document.addEventListener('DOMContentLoaded', function() {
         .then(data => {
             if (data.success) {
                 form.reset();
-                document.getElementById('addUserModal').querySelector('.btn-close').click();
+                closeModal('addUserModal');
                 showAlert('success', data.message);
                 refreshTable();
             } else {
@@ -560,8 +589,9 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         })
         .catch(error => {
-            console.error('Error:', error);
+            console.error('Error submitting add form:', error);
             showAlert('danger', 'An error occurred. Please try again.');
+            closeModal('addUserModal');
         });
     });
 
@@ -582,7 +612,7 @@ document.addEventListener('DOMContentLoaded', function() {
         .then(response => response.json())
         .then(data => {
             if (data.success) {
-                document.getElementById('editUserModal').querySelector('.btn-close').click();
+                closeModal('editUserModal');
                 showAlert('success', data.message);
                 refreshTable();
             } else {
@@ -590,8 +620,9 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         })
         .catch(error => {
-            console.error('Error:', error);
+            console.error('Error submitting edit form:', error);
             showAlert('danger', 'An error occurred. Please try again.');
+            closeModal('editUserModal');
         });
     });
 
@@ -612,7 +643,7 @@ document.addEventListener('DOMContentLoaded', function() {
         .then(response => response.json())
         .then(data => {
             if (data.success) {
-                document.getElementById('deleteUserModal').querySelector('.btn-close').click();
+                closeModal('deleteUserModal');
                 showAlert('success', data.message);
                 refreshTable();
             } else {
@@ -620,8 +651,9 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         })
         .catch(error => {
-            console.error('Error:', error);
+            console.error('Error submitting delete form:', error);
             showAlert('danger', 'An error occurred. Please try again.');
+            closeModal('deleteUserModal');
         });
     });
 

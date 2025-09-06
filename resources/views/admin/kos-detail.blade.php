@@ -40,7 +40,7 @@
         <h5>List Kamar</h5>
         <div>
             <a href="{{ route('kos.index') }}" class="btn btn-secondary">Kembali ke Master Kos</a>
-            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addKamarModal">
+            <button id="addKamarButton" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addKamarModal">
                 <i class="icofont-plus"></i> Tambah Kamar
             </button>
         </div>
@@ -77,19 +77,16 @@
                     <th>Jenis Kos</th>
                     <th>Tipe Kos</th>
                     <th>Tipe Sewa</th>
-                    <!-- <th>Created At</th> -->
                     <th>Actions</th>
                 </tr>
             </thead>
             <tbody id="kamar-table-body">
                 @forelse ($kosDetails as $index => $item)
                     <tr data-id="{{ $item->id }}">
-                        <td>{{ $index + 1 }}</td> <!-- nomor urut -->
+                        <td>{{ $index + 1 }}</td>
                         <td>{{ $item->nama }}</td>
                         <td>{{ $item->quantity }}</td>
                         <td>{{ $item->lantai ? $item->lantai->nama : '-' }}</td>
-
-                        {{-- Fasilitas --}}
                         <td>
                             @foreach (json_decode($item->fasilitas_ids ?? '[]', true) as $fasId)
                                 @php
@@ -100,21 +97,41 @@
                                 @endif
                             @endforeach
                         </td>
-
-                        {{-- Dekat Dengan --}}
                         <td>
                             @foreach (json_decode($item->dekat_dengan ?? '[]', true) as $lokasi)
                                 <span class="badge bg-success">{{ $lokasi }}</span>
                             @endforeach
                         </td>
-
-                        <td>{{ $item->Deskripsi }}</td>
+                        <td>{!! $item->deskripsi ? html_entity_decode($item->deskripsi) : '-' !!}</td>
                         <td>{{ $item->jenis_kos }}</td>
                         <td>{{ $item->tipe_kos?->nama ?? '-' }}</td>
                         <td>{{ $item->tipe_sewa }}</td>
-                        <td>{{ $item->created_at->format('d M Y H:i') }}</td>
                         <td>
-                            <!-- tombol action -->
+                            <button class="btn btn-sm btn-warning edit-btn" 
+                                data-id="{{ $item->id }}"
+                                data-nama="{{ $item->nama }}"
+                                data-tipe_kos_id="{{ $item->tipe_kos_id }}"
+                                data-lantai_id="{{ $item->lantai_id }}"
+                                data-quantity="{{ $item->quantity }}"
+                                data-jenis_kos="{{ $item->jenis_kos }}"
+                                data-deskripsi="{{ htmlentities($item->deskripsi ?? '') }}"
+                                data-dekat_dengan='{{ json_encode(json_decode($item->dekat_dengan ?? '[]', true)) }}'
+                                data-fasilitas_ids='{{ json_encode(json_decode($item->fasilitas_ids ?? '[]', true)) }}'
+                                data-tipe_sewa="{{ $item->tipe_sewa }}"
+                                data-bs-toggle="modal" 
+                                data-bs-target="#editKamarModal">
+                                <i class="icofont-edit"></i> Edit
+                            </button>
+                            <a href="/dashboard/kos/{{ $item->kos_id }}/gallery/{{ $item->id }}" 
+                               class="btn btn-sm btn-info">
+                                <i class="icofont-image"></i> Gallery
+                            </a>
+                            <button class="btn btn-sm btn-danger delete-btn" 
+                                data-id="{{ $item->id }}" 
+                                data-bs-toggle="modal" 
+                                data-bs-target="#deleteKamarModal">
+                                <i class="icofont-trash"></i> Delete
+                            </button>
                         </td>
                     </tr>
                 @empty
@@ -123,27 +140,11 @@
                     </tr>
                 @endforelse
             </tbody>
-
         </table>
     </div>
 
     <!-- Add Kamar Modal -->
     <div class="modal fade" id="addKamarModal" tabindex="-1" aria-labelledby="addKamarModalLabel" aria-hidden="true">
-        <!-- Success/Error Messages -->
-        <div id="alert-container">
-            @if (session('success'))
-                <div class="alert alert-success alert-dismissible fade show" role="alert">
-                    {{ session('success') }}
-                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                </div>
-            @endif
-            @if (session('error'))
-                <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                    {{ session('error') }}
-                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                </div>
-            @endif
-        </div>
         <div class="modal-dialog modal-lg">
             <div class="modal-content">
                 <div class="modal-header">
@@ -254,21 +255,6 @@
 
     <!-- Edit Kamar Modal -->
     <div class="modal fade" id="editKamarModal" tabindex="-1" aria-labelledby="editKamarModalLabel" aria-hidden="true">
-        <!-- Success/Error Messages -->
-        <div id="alert-container">
-            @if (session('success'))
-                <div class="alert alert-success alert-dismissible fade show" role="alert">
-                    {{ session('success') }}
-                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                </div>
-            @endif
-            @if (session('error'))
-                <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                    {{ session('error') }}
-                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                </div>
-            @endif
-        </div>
         <div class="modal-dialog modal-lg">
             <div class="modal-content">
                 <div class="modal-header">
@@ -322,7 +308,6 @@
                                 <small class="text-danger">{{ $message }}</small>
                             @enderror
                         </div>
-
                         <div class="mb-3">
                             <label for="edit_quantity" class="form-label">Quantity</label>
                             <input type="number" class="form-control" id="edit_quantity" name="quantity" required>
@@ -407,6 +392,8 @@
 @endsection
 
 @section('scripts')
+<script src="https://cdn.ckeditor.com/ckeditor5/34.0.0/classic/ckeditor.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/2.4.0/purify.min.js"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     // Check for CSRF token
@@ -415,6 +402,111 @@ document.addEventListener('DOMContentLoaded', function() {
         console.error('CSRF token not found.');
         alert('CSRF token is missing. Please contact the administrator.');
         return;
+    }
+
+    // Initialize CKEditor
+    let addEditor = null;
+    let editEditor = null;
+
+    function initCKEditor() {
+        // CKEditor for Add Modal
+        ClassicEditor
+            .create(document.querySelector('#deskripsi'), {
+                toolbar: ['heading', '|', 'bold', 'italic', 'link', 'bulletedList', 'numberedList', '|', 'outdent', 'indent', '|', 'blockQuote', 'insertTable', 'undo', 'redo'],
+                height: '250px'
+            })
+            .then(editor => {
+                addEditor = editor;
+            })
+            .catch(error => {
+                console.error('Error initializing CKEditor for add:', error);
+            });
+
+        // CKEditor for Edit Modal
+        ClassicEditor
+            .create(document.querySelector('#edit_deskripsi'), {
+                toolbar: ['heading', '|', 'bold', 'italic', 'link', 'bulletedList', 'numberedList', '|', 'outdent', 'indent', '|', 'blockQuote', 'insertTable', 'undo', 'redo'],
+                height: '250px'
+            })
+            .then(editor => {
+                editEditor = editor;
+            })
+            .catch(error => {
+                console.error('Error initializing CKEditor for edit:', error);
+            });
+    }
+
+    // Initialize editor after DOM ready
+    setTimeout(initCKEditor, 100);
+
+    // Function to close modal and restore scroll
+    function closeModal(modalId) {
+        const modalElement = document.getElementById(modalId);
+        const modal = bootstrap.Modal.getInstance(modalElement) || new bootstrap.Modal(modalElement);
+        
+        // Move focus to the "Tambah Kamar" button before hiding the modal
+        const focusTarget = document.getElementById('addKamarButton');
+        if (focusTarget) {
+            focusTarget.focus();
+        }
+
+        modal.hide();
+        
+        // Remove backdrop and restore scroll
+        const backdrop = document.querySelector('.modal-backdrop');
+        if (backdrop) {
+            backdrop.remove();
+        }
+        document.body.classList.remove('modal-open');
+        document.body.style.overflow = ''; // Restore scroll
+    }
+
+    // Handle modal hidden event to ensure focus is managed
+    ['addKamarModal', 'editKamarModal', 'deleteKamarModal'].forEach(modalId => {
+        const modalElement = document.getElementById(modalId);
+        modalElement.addEventListener('hidden.bs.modal', () => {
+            // Ensure focus is moved to a safe element after modal is hidden
+            const focusTarget = document.getElementById('addKamarButton');
+            if (focusTarget) {
+                focusTarget.focus();
+            }
+            // Additional cleanup for scroll
+            document.body.classList.remove('modal-open');
+            document.body.style.overflow = '';
+        });
+    });
+
+    // Function to show alerts
+    function showAlert(type, message) {
+        const alertContainer = document.getElementById('alert-container');
+        const alert = document.createElement('div');
+        alert.className = `alert alert-${type} alert-dismissible fade show`;
+        alert.setAttribute('role', 'alert');
+        alert.innerHTML = `
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        `;
+        alertContainer.innerHTML = '';
+        alertContainer.appendChild(alert);
+        setTimeout(() => {
+            alert.classList.remove('show');
+            setTimeout(() => alert.remove(), 150);
+        }, 3000);
+    }
+
+    // Function to sanitize and render HTML
+    function renderHtml(html) {
+        if (!html) return '-';
+        // Use DOMPurify to sanitize HTML
+        const cleanHtml = DOMPurify.sanitize(html, {
+            ALLOWED_TAGS: ['p', 'ul', 'ol', 'li', 'blockquote', 'strong', 'em', 'br'],
+            ALLOWED_ATTR: []
+        });
+        // Truncate text for display
+        const tempDiv = document.createElement('div');
+        tempDiv.innerHTML = cleanHtml;
+        const textContent = tempDiv.textContent || tempDiv.innerText || '';
+        return textContent.length > 50 ? cleanHtml.substring(0, 50) + '...' : cleanHtml;
     }
 
     // Fetch fasilitas data for mapping IDs to names
@@ -446,118 +538,6 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // Initialize Add Kamar Modal dropdown
-    const addFasilitasSelect = document.getElementById('fasilitas_ids');
-    const addFasilitasChips = document.getElementById('add_fasilitas_chips');
-    addFasilitasSelect.addEventListener('change', () => {
-        const id = addFasilitasSelect.value;
-        const name = addFasilitasSelect.options[addFasilitasSelect.selectedIndex]?.text;
-        createChip(id, name, addFasilitasChips, 'addKamarForm');
-        addFasilitasSelect.value = ''; // Reset dropdown
-    });
-
-    // Initialize Edit Kamar Modal dropdown
-    const editFasilitasSelect = document.getElementById('edit_fasilitas_ids');
-    const editFasilitasChips = document.getElementById('edit_fasilitas_chips');
-    editFasilitasSelect.addEventListener('change', () => {
-        const id = editFasilitasSelect.value;
-        const name = editFasilitasSelect.options[editFasilitasSelect.selectedIndex]?.text;
-        createChip(id, name, editFasilitasChips, 'editKamarForm');
-        editFasilitasSelect.value = ''; // Reset dropdown
-    });
-
-    // Function to refresh table data
-    function refreshTable() {
-    fetch('{{ route('kos.detail.data', $kos->id) }}', {
-        headers: {
-            'X-CSRF-TOKEN': csrfToken,
-            'Accept': 'application/json'
-        }
-    })
-    .then(response => response.json())
-    .then(data => {
-        const tbody = document.getElementById('kamar-table-body');
-        tbody.innerHTML = '';
-        if (!Array.isArray(data) || data.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="10" class="text-center">No data available</td></tr>';
-            return;
-        }
-
-        data.forEach((item, index) => {
-            if (!item) return;
-
-            // fasilitas
-            const fasilitasIds = Array.isArray(item.fasilitas_ids)
-                ? item.fasilitas_ids
-                : JSON.parse(item.fasilitas_ids || '[]');
-            const fasilitasChips = fasilitasIds.map(id => {
-                const nama = fasilitasMap[id] || 'Unknown';
-                return `<span class="badge bg-primary me-1 text-white">${nama}</span>`;
-            }).join('');
-
-            // dekat dengan
-            const dekatDenganArr = Array.isArray(item.dekat_dengan)
-                ? item.dekat_dengan
-                : JSON.parse(item.dekat_dengan || '[]');
-            const dekatChips = dekatDenganArr.map(val =>
-                `<span class="badge bg-success me-1 text-white">${val}</span>`
-            ).join('');
-
-            // row
-            const row = document.createElement('tr');
-            row.setAttribute('data-id', item.id || '');
-            // row
-            row.innerHTML = `
-                <td>${index + 1}</td>
-                <td>${item.nama || '-'}</td>
-                <td>${item.quantity || '-'}</td>
-                <td>${item.lantai?.nama || '-'}</td>
-                <td>${fasilitasChips || '-'}</td>
-                <td>${dekatChips || '-'}</td>
-                <td>${item.deskripsi || '-'}</td>
-                <td>${item.jenis_kos || '-'}</td>
-                <td>${item.tipe_kos?.nama || '-'}</td>
-                <td>${item.tipe_sewa || '-'}</td>   {{-- 🔹 tampilkan di tabel --}}
-                <td>
-                    <button class="btn btn-sm btn-warning edit-btn" 
-                        data-id="${item.id || ''}"
-                        data-nama="${item.nama || ''}"
-                        data-tipe_kos_id="${item.tipe_kos_id || ''}"
-                        data-lantai_id="${item.lantai_id || ''}"
-                        data-quantity="${item.quantity || ''}"
-                        data-jenis_kos="${item.jenis_kos || ''}"
-                        data-deskripsi="${item.deskripsi || ''}"
-                        data-dekat_dengan='${JSON.stringify(dekatDenganArr)}'
-                        data-fasilitas_ids='${JSON.stringify(fasilitasIds)}'
-                        data-bs-toggle="modal" 
-                        data-bs-target="#editKamarModal">
-                        <i class="icofont-edit"></i> Edit
-                    </button>
-                      <a href="/dashboard/kos/${item.kos_id}/gallery/${item.id}" 
-                         class="btn btn-sm btn-info">
-                          <i class="icofont-image"></i> Gallery
-                      </a>
-                    <button class="btn btn-sm btn-danger delete-btn" 
-                        data-id="${item.id || ''}" 
-                        data-bs-toggle="modal" 
-                        data-bs-target="#deleteKamarModal">
-                        <i class="icofont-trash"></i> Delete
-                    </button>
-                </td>
-            `;
-
-            tbody.appendChild(row);
-        });
-
-        attachButtonListeners();
-    })
-    .catch(error => {
-        console.error('Error fetching table data:', error);
-        showAlert('danger', 'Failed to refresh table data.');
-    });
-}
-
-
     // Function to create dekat_dengan chip
     function createDekatChip(value, container, formId) {
         if (!value || value.trim() === '') return;
@@ -582,6 +562,26 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
+    // Initialize Add Kamar Modal dropdown
+    const addFasilitasSelect = document.getElementById('fasilitas_ids');
+    const addFasilitasChips = document.getElementById('add_fasilitas_chips');
+    addFasilitasSelect.addEventListener('change', () => {
+        const id = addFasilitasSelect.value;
+        const name = addFasilitasSelect.options[addFasilitasSelect.selectedIndex]?.text;
+        createChip(id, name, addFasilitasChips, 'addKamarForm');
+        addFasilitasSelect.value = ''; // Reset dropdown
+    });
+
+    // Initialize Edit Kamar Modal dropdown
+    const editFasilitasSelect = document.getElementById('edit_fasilitas_ids');
+    const editFasilitasChips = document.getElementById('edit_fasilitas_chips');
+    editFasilitasSelect.addEventListener('change', () => {
+        const id = editFasilitasSelect.value;
+        const name = editFasilitasSelect.options[editFasilitasSelect.selectedIndex]?.text;
+        createChip(id, name, editFasilitasChips, 'editKamarForm');
+        editFasilitasSelect.value = ''; // Reset dropdown
+    });
+
     // Handle Add Kamar dekat_dengan input
     const addDekatInput = document.getElementById('dekat_dengan_input');
     const addDekatChips = document.getElementById('add_dekat_chips');
@@ -604,22 +604,97 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    // Function to show alerts
-    function showAlert(type, message) {
-        const alertContainer = document.getElementById('alert-container');
-        const alert = document.createElement('div');
-        alert.className = `alert alert-${type} alert-dismissible fade show`;
-        alert.setAttribute('role', 'alert');
-        alert.innerHTML = `
-            ${message}
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        `;
-        alertContainer.innerHTML = '';
-        alertContainer.appendChild(alert);
-        setTimeout(() => {
-            alert.classList.remove('show');
-            setTimeout(() => alert.remove(), 150);
-        }, 3000);
+    // Function to refresh table data
+    function refreshTable() {
+        fetch('{{ route('kos.detail.data', $kos->id) }}', {
+            headers: {
+                'X-CSRF-TOKEN': csrfToken,
+                'Accept': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            const tbody = document.getElementById('kamar-table-body');
+            tbody.innerHTML = '';
+            if (!Array.isArray(data) || data.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="10" class="text-center">No data available</td></tr>';
+                return;
+            }
+
+            data.forEach((item, index) => {
+                if (!item) return;
+
+                // Fasilitas
+                const fasilitasIds = Array.isArray(item.fasilitas_ids)
+                    ? item.fasilitas_ids
+                    : JSON.parse(item.fasilitas_ids || '[]');
+                const fasilitasChips = fasilitasIds.map(id => {
+                    const nama = fasilitasMap[id] || 'Unknown';
+                    return `<span class="badge bg-primary me-1 text-white">${nama}</span>`;
+                }).join('');
+
+                // Dekat dengan
+                const dekatDenganArr = Array.isArray(item.dekat_dengan)
+                    ? item.dekat_dengan
+                    : JSON.parse(item.dekat_dengan || '[]');
+                const dekatChips = dekatDenganArr.map(val =>
+                    `<span class="badge bg-success me-1 text-white">${val}</span>`
+                ).join('');
+
+                // Sanitize deskripsi for table display
+                const deskripsiHtml = renderHtml(item.deskripsi);
+
+                // Row
+                const row = document.createElement('tr');
+                row.setAttribute('data-id', item.id || '');
+                row.innerHTML = `
+                    <td>${index + 1}</td>
+                    <td>${item.nama || '-'}</td>
+                    <td>${item.quantity || '-'}</td>
+                    <td>${item.lantai?.nama || '-'}</td>
+                    <td>${fasilitasChips || '-'}</td>
+                    <td>${dekatChips || '-'}</td>
+                    <td title="${item.deskripsi ? DOMPurify.sanitize(item.deskripsi) : '-'}">${deskripsiHtml}</td>
+                    <td>${item.jenis_kos || '-'}</td>
+                    <td>${item.tipe_kos?.nama || '-'}</td>
+                    <td>${item.tipe_sewa || '-'}</td>
+                    <td>
+                        <button class="btn btn-sm btn-warning edit-btn" 
+                            data-id="${item.id || ''}"
+                            data-nama="${item.nama || ''}"
+                            data-tipe_kos_id="${item.tipe_kos_id || ''}"
+                            data-lantai_id="${item.lantai_id || ''}"
+                            data-quantity="${item.quantity || ''}"
+                            data-jenis_kos="${item.jenis_kos || ''}"
+                            data-deskripsi="${encodeURIComponent(item.deskripsi || '')}"
+                            data-dekat_dengan='${JSON.stringify(dekatDenganArr)}'
+                            data-fasilitas_ids='${JSON.stringify(fasilitasIds)}'
+                            data-tipe_sewa="${item.tipe_sewa || 'Bulanan'}"
+                            data-bs-toggle="modal" 
+                            data-bs-target="#editKamarModal">
+                            <i class="icofont-edit"></i> Edit
+                        </button>
+                        <a href="/dashboard/kos/${item.kos_id}/gallery/${item.id}" 
+                           class="btn btn-sm btn-info">
+                            <i class="icofont-image"></i> Gallery
+                        </a>
+                        <button class="btn btn-sm btn-danger delete-btn" 
+                            data-id="${item.id || ''}" 
+                            data-bs-toggle="modal" 
+                            data-bs-target="#deleteKamarModal">
+                            <i class="icofont-trash"></i> Delete
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+
+            attachButtonListeners();
+        })
+        .catch(error => {
+            console.error('Error fetching table data:', error);
+            showAlert('danger', 'Failed to refresh table data.');
+        });
     }
 
     // Function to attach event listeners to buttons
@@ -632,30 +707,41 @@ document.addEventListener('DOMContentLoaded', function() {
                 const lantai_id = this.getAttribute('data-lantai_id') || '';
                 const quantity = this.getAttribute('data-quantity') || '';
                 const jenis_kos = this.getAttribute('data-jenis_kos') || '';
-                const deskripsi = this.getAttribute('data-deskripsi') || '';
-                const dekat_dengan = this.getAttribute('data-dekat_dengan') || '';
-                const fasilitas_ids = JSON.parse(this.getAttribute('data-fasilitas_ids') || '[]');
+                const deskripsi = decodeURIComponent(this.getAttribute('data-deskripsi') || '');
+                const dekatDenganData = JSON.parse(this.getAttribute('data-dekat_dengan') || '[]');
+                const fasilitasIds = JSON.parse(this.getAttribute('data-fasilitas_ids') || '[]');
+                const tipe_sewa = this.getAttribute('data-tipe_sewa') || 'Bulanan';
+
                 document.getElementById('edit_id').value = id;
                 document.getElementById('edit_nama').value = nama;
                 document.getElementById('edit_tipe_kos_id').value = tipe_kos_id;
                 document.getElementById('edit_lantai_id').value = lantai_id;
                 document.getElementById('edit_quantity').value = quantity;
                 document.getElementById('edit_jenis_kos').value = jenis_kos;
-                document.getElementById('edit_deskripsi').value = deskripsi;
-                document.getElementById('edit_tipe_sewa').value = this.getAttribute('data-tipe_sewa') || 'Bulanan';
-                const dekatDenganData = JSON.parse(this.getAttribute('data-dekat_dengan') || '[]');
-                editDekatChips.innerHTML = '';
-                document.querySelectorAll('#editKamarForm input[name="dekat_dengan[]"]').forEach(input => input.remove());
-                dekatDenganData.forEach(val => createDekatChip(val, editDekatChips, 'editKamarForm'));
+                document.getElementById('edit_tipe_sewa').value = tipe_sewa;
+                document.getElementById('editKamarForm').action = `{{ url('dashboard/kos-detail') }}/${id}`;
+
+                // Set deskripsi to editor
+                if (editEditor) {
+                    editEditor.setData(deskripsi);
+                } else {
+                    document.getElementById('edit_deskripsi').value = deskripsi;
+                }
+
                 // Clear existing chips and inputs
                 editFasilitasChips.innerHTML = '';
                 document.querySelectorAll('#editKamarForm input[name="fasilitas_ids[]"]').forEach(input => input.remove());
                 // Populate chips for existing fasilitas_ids
-                fasilitas_ids.forEach(id => {
+                fasilitasIds.forEach(id => {
                     const name = fasilitasMap[id] || 'Unknown';
                     createChip(id, name, editFasilitasChips, 'editKamarForm');
                 });
-                document.getElementById('editKamarForm').action = `{{ url('dashboard/kos-detail') }}/${id}`;
+
+                // Clear existing dekat_dengan chips and inputs
+                editDekatChips.innerHTML = '';
+                document.querySelectorAll('#editKamarForm input[name="dekat_dengan[]"]').forEach(input => input.remove());
+                // Populate dekat_dengan chips
+                dekatDenganData.forEach(val => createDekatChip(val, editDekatChips, 'editKamarForm'));
             });
         });
 
@@ -674,6 +760,11 @@ document.addEventListener('DOMContentLoaded', function() {
         const form = this;
         const formData = new FormData(form);
 
+        // Update deskripsi from editor to form data
+        if (addEditor) {
+            formData.set('deskripsi', addEditor.getData());
+        }
+
         fetch(form.action, {
             method: 'POST',
             body: formData,
@@ -687,8 +778,13 @@ document.addEventListener('DOMContentLoaded', function() {
             if (data.success) {
                 form.reset();
                 addFasilitasChips.innerHTML = '';
+                addDekatChips.innerHTML = '';
                 document.querySelectorAll('#addKamarForm input[name="fasilitas_ids[]"]').forEach(input => input.remove());
-                document.getElementById('addKamarModal').querySelector('.btn-close').click();
+                document.querySelectorAll('#addKamarForm input[name="dekat_dengan[]"]').forEach(input => input.remove());
+                if (addEditor) {
+                    addEditor.setData('');
+                }
+                closeModal('addKamarModal');
                 showAlert('success', data.message);
                 refreshTable();
             } else {
@@ -696,8 +792,9 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         })
         .catch(error => {
-            console.error('Error:', error);
+            console.error('Error submitting add form:', error);
             showAlert('danger', 'An error occurred. Please try again.');
+            closeModal('addKamarModal');
         });
     });
 
@@ -706,6 +803,11 @@ document.addEventListener('DOMContentLoaded', function() {
         e.preventDefault();
         const form = this;
         const formData = new FormData(form);
+
+        // Update deskripsi from editor to form data
+        if (editEditor) {
+            formData.set('deskripsi', editEditor.getData());
+        }
 
         fetch(form.action, {
             method: 'POST',
@@ -718,7 +820,7 @@ document.addEventListener('DOMContentLoaded', function() {
         .then(response => response.json())
         .then(data => {
             if (data.success) {
-                document.getElementById('editKamarModal').querySelector('.btn-close').click();
+                closeModal('editKamarModal');
                 showAlert('success', data.message);
                 refreshTable();
             } else {
@@ -726,8 +828,9 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         })
         .catch(error => {
-            console.error('Error:', error);
+            console.error('Error submitting edit form:', error);
             showAlert('danger', 'An error occurred. Please try again.');
+            closeModal('editKamarModal');
         });
     });
 
@@ -748,7 +851,7 @@ document.addEventListener('DOMContentLoaded', function() {
         .then(response => response.json())
         .then(data => {
             if (data.success) {
-                document.getElementById('deleteKamarModal').querySelector('.btn-close').click();
+                closeModal('deleteKamarModal');
                 showAlert('success', data.message);
                 refreshTable();
             } else {
@@ -756,8 +859,9 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         })
         .catch(error => {
-            console.error('Error:', error);
+            console.error('Error submitting delete form:', error);
             showAlert('danger', 'An error occurred. Please try again.');
+            closeModal('deleteKamarModal');
         });
     });
 

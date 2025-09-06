@@ -24,4 +24,10 @@ class Kos extends Model
     {
         return $this->belongsTo(Lokasi::class, 'daerah_id');
     }
+
+    
+    public function gallery()
+    {
+        return $this->hasMany(Gallery::class, 'kos_id');
+    }
 }
