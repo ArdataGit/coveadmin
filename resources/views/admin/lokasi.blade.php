@@ -312,8 +312,16 @@ document.addEventListener('DOMContentLoaded', function() {
         .then(data => {
             if (data.success) {
                 form.reset();
-                const modal = bootstrap.Modal.getInstance(document.getElementById('addLokasiModal'));
+                const modalEl = document.getElementById('addLokasiModal');
+                const modal = bootstrap.Modal.getInstance(modalEl);
                 modal.hide();
+                modal.dispose();
+
+                // Hapus backdrop
+                document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
+                document.body.classList.remove('modal-open');
+                document.body.style = '';
+
                 showAlert('success', data.message);
                 refreshTable(searchInput.value.trim());
             } else {
@@ -340,8 +348,17 @@ document.addEventListener('DOMContentLoaded', function() {
         .then(res => res.json())
         .then(data => {
             if (data.success) {
-                const modal = bootstrap.Modal.getInstance(document.getElementById('editLokasiModal'));
+                form.reset();
+                const modalEl = document.getElementById('editLokasiModal');
+                const modal = bootstrap.Modal.getInstance(modalEl);
                 modal.hide();
+                modal.dispose();
+
+                // Hapus backdrop dan reset body
+                document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
+                document.body.classList.remove('modal-open');
+                document.body.style = '';
+
                 showAlert('success', data.message);
                 refreshTable(searchInput.value.trim());
             } else {

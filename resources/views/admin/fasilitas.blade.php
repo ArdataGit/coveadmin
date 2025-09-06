@@ -8,7 +8,7 @@
     <div class="d-flex justify-content-between mb-3">
         <h5>List Fasilitas</h5>
     </div>
-    <div class="row">
+    <div class="row mb-3">
         <div class="col-6">
             <input type="text" id="searchInput" class="form-control" placeholder="Search facilities..." style="max-width: 300px;">
         </div>

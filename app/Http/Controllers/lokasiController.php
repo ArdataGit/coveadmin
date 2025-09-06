@@ -42,13 +42,29 @@ class lokasiController extends Controller
         ]);
 
         if ($validator->fails()) {
+            if ($request->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => $validator->errors()->first(),
+                ], 422);
+            }
+
             return redirect()->back()
                 ->withErrors($validator)
                 ->withInput()
                 ->with('error', $validator->errors()->first());
         }
 
-        Lokasi::create($request->only('nama'));
+        $lokasi = Lokasi::create($request->only('nama'));
+
+        if ($request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Location added successfully',
+                'data'    => $lokasi
+            ]);
+        }
+
         return redirect()->route('lokasi.index')->with('success', 'Location added successfully');
     }
 
@@ -59,6 +75,13 @@ class lokasiController extends Controller
         ]);
 
         if ($validator->fails()) {
+            if ($request->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => $validator->errors()->first(),
+                ], 422);
+            }
+
             return redirect()->back()
                 ->withErrors($validator)
                 ->withInput()
@@ -67,13 +90,30 @@ class lokasiController extends Controller
 
         $lokasi = Lokasi::findOrFail($id);
         $lokasi->update($request->only('nama'));
+
+        if ($request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Location updated successfully',
+                'data'    => $lokasi
+            ]);
+        }
+
         return redirect()->route('lokasi.index')->with('success', 'Location updated successfully');
     }
 
-    public function destroy($id)
+    public function destroy(Request $request, $id)
     {
         $lokasi = Lokasi::findOrFail($id);
         $lokasi->delete();
+
+        if ($request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Location deleted successfully'
+            ]);
+        }
+
         return redirect()->route('lokasi.index')->with('success', 'Location deleted successfully');
     }
 

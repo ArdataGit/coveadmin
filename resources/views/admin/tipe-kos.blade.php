@@ -4,7 +4,7 @@
 
 @section('content')
 <div class="dashboard-content">
-    <h2 class="mb-4">Master Tipe Kos</h2>
+    <h2 class="mb-4">Master Tipe Kamar</h2>
 
     <!-- Search input -->
     <div class="mb-3 row" >
