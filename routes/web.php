@@ -28,6 +28,14 @@ Route::post('/login', [AdminAuthController::class, 'login'])->name('admin.login.
 // Proses logout
 Route::post('/logout', [AdminAuthController::class, 'logout'])->name('admin.logout');
 
+
+    Route::get('/google-test', function () {
+        return view('auth.google');
+    });
+
+    Route::get('/auth/google', [UserController::class, 'redirectToGoogle']);
+    Route::get('/auth/google/callback', [UserController::class, 'handleGoogleCallback']);
+
 // ====================
 // Admin Routes (Protected)
 // ====================
@@ -159,10 +167,11 @@ Route::prefix('dashboard')->middleware('auth:admin')->group(function () {
     Route::post('/tickets/{ticket}/admin-response', [ticketController::class, 'adminResponse'])->name('tickets.adminResponse');
 
     // List semua transaksi
-Route::get('/transaksi-produk', [transaksiProdukController::class, 'index'])->name('transaksi-produk.index');
-    Route::get('/transaksi-produk/create', [transaksiProdukController::class, 'create'])->name('transaksi-produk.create');
-    Route::get('/transaksi-produk/{id}', [transaksiProdukController::class, 'show'])->name('transaksi-produk.show');
-    Route::get('/transaksi-produk/{id}/edit', [transaksiProdukController::class, 'edit'])->name('transaksi-produk.edit');
-    Route::put('/transaksi-produk/{id}', [transaksiProdukController::class, 'update'])->name('transaksi-produk.update');
-    Route::delete('/transaksi-produk/{id}', [transaksiProdukController::class, 'destroy'])->name('transaksi-produk.destroy');
-});
+    Route::get('/transaksi-produk', [transaksiProdukController::class, 'index'])->name('transaksi-produk.index');
+        Route::get('/transaksi-produk/create', [transaksiProdukController::class, 'create'])->name('transaksi-produk.create');
+        Route::get('/transaksi-produk/{id}', [transaksiProdukController::class, 'show'])->name('transaksi-produk.show');
+        Route::get('/transaksi-produk/{id}/edit', [transaksiProdukController::class, 'edit'])->name('transaksi-produk.edit');
+        Route::put('/transaksi-produk/{id}', [transaksiProdukController::class, 'update'])->name('transaksi-produk.update');
+        Route::delete('/transaksi-produk/{id}', [transaksiProdukController::class, 'destroy'])->name('transaksi-produk.destroy');
+    });
+

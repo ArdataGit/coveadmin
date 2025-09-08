@@ -22,6 +22,13 @@ Route::middleware('auth:sanctum')->post('/logout', [userController::class, 'logo
 Route::middleware('auth:sanctum')->post('/account/update', [userController::class, 'updateAccount']);
 Route::middleware('auth:sanctum')->get('/account', [userController::class, 'profile']);
 
+// Google OAuth routes
+Route::get('/auth/google', [UserController::class, 'redirectToGoogle']);
+Route::get('/auth/google/callback', [UserController::class, 'handleGoogleCallback']);
+
+// API Google login (for mobile/SPA)
+Route::post('/auth/google/login', [UserController::class, 'loginWithGoogle']);
+
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
 });

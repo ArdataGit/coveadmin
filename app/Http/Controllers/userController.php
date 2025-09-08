@@ -9,6 +9,8 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
+use Laravel\Socialite\Facades\Socialite;
 
 class userController extends Controller
 {
@@ -111,6 +113,171 @@ class userController extends Controller
             ]);
         } catch (\Exception $e) {
             return response()->json(['success' => false, 'message' => 'Failed to register: ' . $e->getMessage()], 500);
+        }
+    }
+
+    /**
+     * Redirect to Google OAuth
+     */
+    public function redirectToGoogle()
+    {
+        try {
+            return Socialite::driver('google')->redirect();
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to redirect to Google: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function getgooglehtml()
+    {
+        return view('auth.google'); // Create this view to initiate Google OAuth
+    }
+
+    /**
+     * Handle Google OAuth callback
+     */
+    public function handleGoogleCallback()
+    {
+        try {
+            $googleUser = Socialite::driver('google')->user();
+            
+            // Check if user already exists with this email
+            $user = User::where('email', $googleUser->getEmail())->first();
+            
+            if ($user) {
+                // User exists, update Google ID if not set
+                if (!$user->google_id) {
+                    $user->update(['google_id' => $googleUser->getId()]);
+                }
+            } else {
+                // Create new user
+                $user = User::create([
+                    'nama' => $googleUser->getName(),
+                    'email' => $googleUser->getEmail(),
+                    'google_id' => $googleUser->getId(),
+                    'status' => 'active',
+                    'email_verified_at' => now(),
+                    // Generate a random password since it's Google login
+                    'password' => Hash::make(Str::random(24)),
+                    // You might want to set default values for required fields
+                    'nik' => null, // or generate a temporary NIK
+                    'alamat' => null, // user can fill this later
+                ]);
+
+                // Send welcome email
+                try {
+                    Mail::to($user->email)->send(new WelcomeEmail($user));
+                } catch (\Exception $emailException) {
+                    \Log::error('Failed to send welcome email during Google login', [
+                        'user_id' => $user->id,
+                        'email' => $user->email,
+                        'error' => $emailException->getMessage()
+                    ]);
+                }
+            }
+
+            // Generate token
+            $token = $user->createToken('auth_token')->plainTextToken;
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Google login successful',
+                'user' => $user,
+                'token' => $token,
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Google login failed: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * API Google Login (for mobile/SPA applications)
+     * Expects Google token from client-side
+     */
+    public function loginWithGoogle(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'google_token' => 'required|string',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => $validator->errors()->first()
+            ], 422);
+        }
+
+        try {
+            // Verify Google token
+            $client = new \Google_Client(['client_id' => config('services.google.client_id')]);
+            $payload = $client->verifyIdToken($request->google_token);
+            
+            if (!$payload) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Invalid Google token'
+                ], 401);
+            }
+
+            $googleId = $payload['sub'];
+            $email = $payload['email'];
+            $name = $payload['name'];
+
+            // Check if user exists
+            $user = User::where('email', $email)->orWhere('google_id', $googleId)->first();
+
+            if ($user) {
+                // Update Google ID if not set
+                if (!$user->google_id) {
+                    $user->update(['google_id' => $googleId]);
+                }
+            } else {
+                // Create new user
+                $user = User::create([
+                    'nama' => $name,
+                    'email' => $email,
+                    'google_id' => $googleId,
+                    'status' => 'active',
+                    'email_verified_at' => now(),
+                    'password' => Hash::make(Str::random(24)),
+                    'nik' => null,
+                    'alamat' => null,
+                ]);
+
+                // Send welcome email
+                try {
+                    Mail::to($user->email)->send(new WelcomeEmail($user));
+                } catch (\Exception $emailException) {
+                    \Log::error('Failed to send welcome email during Google API login', [
+                        'user_id' => $user->id,
+                        'email' => $user->email,
+                        'error' => $emailException->getMessage()
+                    ]);
+                }
+            }
+
+            // Generate token
+            $token = $user->createToken('auth_token')->plainTextToken;
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Google login successful',
+                'user' => $user,
+                'token' => $token,
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Google login failed: ' . $e->getMessage()
+            ], 500);
         }
     }
 
