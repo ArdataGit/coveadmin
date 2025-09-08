@@ -45,6 +45,7 @@ Route::get('/getLokasi', [lokasiController::class, 'getAll']);
 Route::get('/getTipekos', [tipeKosController::class, 'getAll']);
 Route::get('/getKos', [kosController::class, 'getAllData']);
 Route::get('/getProduk', [produkController::class, 'getAllData']);
+Route::get('/Produk/{id}', [produkController::class, 'getById']);
 
 Route::get('/getKos/{id}', [kosController::class, 'getKosById']);
 Route::get('/getKamar/{kos_id}/kamar/{kamar_id}', [kosController::class, 'getKamarDetail']);

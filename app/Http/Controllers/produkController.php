@@ -166,13 +166,87 @@ class ProdukController extends Controller
         return redirect()->route('produk.index')->with('success', 'Produk berhasil dihapus');
     }
   
-  	public function getAllData()
+    public function getById($id)
+      {
+
+          try {
+              $produk = Produk::with(['kategori', 'gambar'])->findOrFail($id);
+
+
+              return response()->json([
+                  'success' => true,
+                  'data' => [
+                      'id_produk' => $produk->id_produk,
+                      'judul_produk' => $produk->judul_produk,
+                      'deskripsi' => $produk->deskripsi,
+                      'harga' => $produk->harga,
+                      'id_kategori' => $produk->id_kategori,
+                      'kategori' => $produk->kategori ? [
+                          'id_kategori' => $produk->kategori->id_kategori,
+                          'nama_kategori' => $produk->kategori->nama_kategori
+                      ] : null,
+                      'gambar' => $produk->gambar->map(function ($gambar) {
+                          return [
+                              'id_gambar' => $gambar->id_gambar,
+                              'url_gambar' => asset($gambar->url_gambar)
+                          ];
+                      })->toArray(),
+                      'created_at' => $produk->created_at->format('d M Y H:i'),
+                  ]
+              ]);
+          } catch (ModelNotFoundException $e) {
+              \Log::error('Produk tidak ditemukan', ['id_produk' => $id, 'error' => $e->getMessage()]);
+
+              return response()->json([
+                  'success' => false,
+                  'message' => 'Produk tidak ditemukan'
+              ], 404);
+          }
+      }
+  
+  	public function getAllData(Request $request)
     {
-        $lokasi = Produk::orderBy('created_at', 'desc')->with('gambar')->get();
+        $search = $request->query('search');
+        $id_kategori = $request->query('id_kategori');
+        $perPage = $request->query('per_page', 10);
+
+        \Log::info('=== getAllData Request Params ===', [
+            'search' => $search,
+            'id_kategori' => $id_kategori,
+            'per_page' => $perPage
+        ]);
+
+        $query = Produk::with(['kategori', 'gambar'])->orderBy('created_at', 'desc');
+
+        if ($search) {
+            $query->where(function ($q) use ($search) {
+                $q->where('judul_produk', 'like', "%{$search}%")
+                  ->orWhere('deskripsi', 'like', "%{$search}%")
+                  ->orWhereHas('kategori', function ($q2) use ($search) {
+                      $q2->where('nama_kategori', 'like', "%{$search}%");
+                  });
+            });
+        }
+
+        if ($id_kategori) {
+            $query->where('id_kategori', $id_kategori);
+        }
+
+        $result = $query->paginate($perPage);
+
+        \Log::info('Jumlah data setelah filter', ['count' => $result->total()]);
 
         return response()->json([
             'success' => true,
-            'data'    => $lokasi
+            'data' => $result->items(),
+            'meta' => [
+                'current_page' => $result->currentPage(),
+                'last_page' => $result->lastPage(),
+                'per_page' => $result->perPage(),
+                'total' => $result->total(),
+                'from' => $result->firstItem(),
+                'to' => $result->lastItem(),
+            ]
         ]);
     }
 }

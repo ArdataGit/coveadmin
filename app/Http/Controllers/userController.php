@@ -259,6 +259,17 @@ class userController extends Controller
             $data['fotoselfie'] = $selfieFilename;
 
             $user = User::create($data);
+          
+            try {
+                Mail::to($user->email)->send(new WelcomeEmail($user));
+            } catch (\Exception $emailException) {
+                // Log email error but don't fail the entire operation
+                \Log::error('Failed to send welcome email during user creation', [
+                    'user_id' => $user->id,
+                    'email' => $user->email,
+                    'error' => $emailException->getMessage()
+                ]);
+            }
 
             if ($request->hasFile('gambarktp')) {
                 $file = $request->file('gambarktp');
